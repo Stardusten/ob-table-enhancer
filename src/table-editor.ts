@@ -1,6 +1,6 @@
 import {Table} from "./table";
-import {App, MarkdownView, TFile} from "obsidian";
-import {deleteLine, deleteLines, insertLineBelow} from "./editor-utils";
+import {App, MarkdownView, Notice, TFile} from "obsidian";
+import {deleteLine, deleteLines, insertLineBelow, insertLineBelowWithText} from "./editor-utils";
 
 export class TableEditor {
 
@@ -240,6 +240,27 @@ export class TableEditor {
 			const rowLineNumber = this.getLineNumber(table, rowIndex);
 			insertLineBelow(editor, rowLineNumber);
 			editor.setLine(rowLineNumber + 1, rowText);
+			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
+		}
+	}
+
+	/**
+	 * 创建一个一行两列（还有一行表头）的新表
+	 */
+	async createMinimalNewTable() {
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView) {
+			const editor = markdownView.editor;
+			const rowIndex = editor.getCursor().line;
+			if (this.tables)
+				for (const table of this.tables.values()) {
+					if (table.fromRowIndex <= rowIndex && rowIndex <= table.toRowIndex) {
+						new Notice('Can\'t create table within another table.');
+						return;
+					}
+				}
+			const text = '| Col 1 | Col 2 |\n|---|---|\n| xxxx | xxxx |\n';
+			insertLineBelowWithText(editor, rowIndex, text);
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}

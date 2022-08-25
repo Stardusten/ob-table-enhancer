@@ -234,6 +234,14 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor, view) => {
+
+			menu.addItem((item) => {
+				item.setTitle('Create 2x2 table');
+				item.onClick(async () => {
+					await this.tableEditor.createMinimalNewTable();
+				})
+			});
+
 			if (!this.hoverCell || !this.hoverTableId)
 				return;
 			// 点选 menu 中的选项时，很可能会移出 cell，因此这里将触发时所在 cell 的 rowIndex 和 colIndex，还有 hoverTableId 先记录下来

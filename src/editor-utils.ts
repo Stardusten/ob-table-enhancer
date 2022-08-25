@@ -58,3 +58,11 @@ export const insertLineBelow = (editor: Editor, line: number) => {
 	editor.replaceRange('\n' + indentation, endOfCurrentLine);
 	return { anchor: { line: line + 1, ch: indentation.length } };
 };
+
+export const insertLineBelowWithText = (editor: Editor, line: number, text: string) => {
+	const endOfCurrentLine = getLineEndPos(line, editor);
+	const indentation = getLeadingWhitespace(editor.getLine(line));
+	const textToInsert = text.split(/\r?\n/).map((s) => indentation + s).join('\n');
+	editor.replaceRange('\n' + textToInsert, endOfCurrentLine);
+	return { anchor: { line: line + 1, ch: indentation.length } };
+}
