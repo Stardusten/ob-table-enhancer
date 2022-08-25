@@ -13,19 +13,24 @@
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252046274.gif)
 
 3. 按上下方向键、Tab 和 Shift-Tab 可更改编辑焦点
+
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252049575.gif)
 
 4. 左右方向键可以移动光标，在光标位于开头和结尾时，将更改编辑焦点
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252052416.gif)
 
 5. 删除行
+
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252056998.gif)
 
 6. 删除列
+
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252055477.gif)
 
 7. 当前行下方插入新行
+
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252059685.gif)
 
 9. 当前列右侧插入新列
+
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252102032.gif)
