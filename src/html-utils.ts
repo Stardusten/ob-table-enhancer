@@ -1,0 +1,23 @@
+export function getCaretPosition(editableElem: HTMLElement) {
+	let caretPos = 0, sel, range;
+	sel = activeWindow.getSelection();
+	if (sel && sel.rangeCount) {
+		range = sel.getRangeAt(0);
+		if (range.commonAncestorContainer.parentNode == editableElem) {
+			caretPos = range.endOffset;
+		}
+	}
+	return caretPos;
+}
+
+export function setCaretPosition(editableElem: HTMLElement, newPos: number) {
+	let caretPos = 0, sel, range = activeDocument.createRange();
+	sel = activeWindow.getSelection();
+	if (sel && sel.rangeCount) {
+		range.setStart(editableElem.childNodes[0], newPos);
+		range.collapse(true);
+		sel.removeAllRanges();
+		sel.addRange(range);
+	}
+	return caretPos;
+}
