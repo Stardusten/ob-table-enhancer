@@ -127,7 +127,11 @@ export class TableEditor {
 			// 使用 editor transaction 更新，性能更好
 			const editor = markdownView.editor;
 			const rowLineNumber = this.getLineNumber(table, rowIndex);
-			editor.setLine(rowLineNumber, TableEditor.rowCells2rowString(table.cells[rowIndex]));
+			const newLine = TableEditor.rowCells2rowString(table.cells[rowIndex]);
+			// 防止没有对文本做修改，导致不触发重新渲染
+			if (editor.getLine(rowLineNumber).length == newLine.length)
+				editor.setLine(rowLineNumber, newLine + ' ');
+			editor.setLine(rowLineNumber, newLine);
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}

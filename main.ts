@@ -301,7 +301,7 @@ export default class MyPlugin extends Plugin {
 			this.hoverTableId,
 			rowIndex,
 			colIndex,
-			cell.innerText,
+			cell.innerText, // 加个空格以触发重新渲染
 		);
 
 		// 取消高亮
