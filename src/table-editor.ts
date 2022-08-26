@@ -23,14 +23,23 @@ export class TableEditor {
 		const fullText = await this.app.vault.read(this.activeFile);
 		this.rows = fullText.split(/\r?\n/);
 		// 匹配格式控制行 XXX 性能考虑，所使用的正则十分简单
-		const formatRowRegex = /^\s*\|([:\-\s|]+)+$/;
+		const formatRowRegex = /^\s*(\|?)(?:[:\-\s|\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]+)+$/;
 		const len = this.rows.length;
+		let existNonStandardTable = false;
 		for (let i = 0; i < len; i++) {
 			const row = this.rows[i];
 			// 找到一个表格
-			if (row.match(formatRowRegex)) {
+			const matchResult = row.match(formatRowRegex);
+			if (matchResult) {
 				// 格式控制行上一行是表头行
 				if (i - 1 < 0) continue; // 没有表头？
+				// 如果表格不是标准格式，则先标准化
+				if (!matchResult[1]) {
+					existNonStandardTable = true;
+					await this.standardize(i);
+					i = i - 1; // 重新 parse 此行
+					continue;
+				}
 				const table = {
 					fromRowIndex: i - 1,
 					toRowIndex: i,
@@ -50,7 +59,30 @@ export class TableEditor {
 				this.tables.set(TableEditor.getIdentifier(table), table);
 			}
 		}
+		// 如果存在不标准的表格，则将标准化后的写回文件
+		if (existNonStandardTable) {
+			const fullTextAfterStandardize = this.rows.join('\n');
+			await this.app.vault.modify(this.activeFile, fullTextAfterStandardize);
+		}
 		console.log(this.tables);
+	}
+
+	/**
+	 * 将不符合 parse 标准的语法的表格标准化
+	 * @param formatRowIndex 第几行是格式控制行
+	 * @param rows 所有行
+	 */
+	async standardize(formatRowIndex: number) {
+		this.rows[formatRowIndex - 1] = ['|', this.rows[formatRowIndex - 1], '|'].join('');
+		this.rows[formatRowIndex] = ['|', this.rows[formatRowIndex], '|'].join('');
+		let i = formatRowIndex;
+		const len = this.rows.length;
+		while (++i < len) {
+			const bodyRow = this.rows[i];
+			if (bodyRow.match(/^\s*[^|]*\|/)) {
+				this.rows[i] = ['|', this.rows[i], '|'].join('');
+			} else break;
+		}
 	}
 
 	// private async writeBackActiveFile() {
