@@ -10,6 +10,11 @@ export function getCaretPosition(editableElem: HTMLElement) {
 	return caretPos;
 }
 
+/**
+ *
+ * @param editableElem
+ * @param newPos
+ */
 export function setCaretPosition(editableElem: HTMLElement, newPos: number) {
 	let caretPos = 0, sel, range = activeDocument.createRange();
 	sel = activeWindow.getSelection();

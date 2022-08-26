@@ -35,14 +35,14 @@ export default class MyPlugin extends Plugin {
 		activeDocument.addEventListener('keydown', async (e) => {
 			// 按下 Esc 或 Enter 时，正在编辑的 cell 退出编辑状态，并提交更改
 			if ((e.key == 'Enter' || e.key == 'Escape') && this.editingCell)
-				await this.doneEdit();
+				await this.doneEdit(this.editingCell);
 		});
 
 		// 如果没有 hover 任何 cell，或者正在编辑的 cell 不是 hover 的 cell
 		// 正在编辑的 cell 退出编辑状态，并提交更改
 		activeDocument.addEventListener('click', async () => {
-			if (!isSameCell(this.hoverCell, this.editingCell)) {
-				await this.doneEdit();
+			if (this.editingCell && !isSameCell(this.hoverCell, this.editingCell)) {
+				await this.doneEdit(this.editingCell);
 			}
 		});
 
@@ -81,6 +81,8 @@ export default class MyPlugin extends Plugin {
 						cell.onmouseout = (e) => this.hoverCell = null;
 						// 为每个 cell 注册点击事件
 						cell.onclick = async (e) => {
+							e.preventDefault();
+							e.stopPropagation();
 
 							// 按下了 ctrl，则不触发编辑
 							if (this.ctrl)
@@ -90,8 +92,17 @@ export default class MyPlugin extends Plugin {
 							if (cell.getAttr('contenteditable') == 'true' || !this.hoverTableId)
 								return;
 
-							if (this.editingCell)
-								await this.doneEdit();
+							// 如果之前正在编辑 cell，则取消之
+							if (this.editingCell && !isSameCell(this.editingCell, this.hoverCell)) {
+								await this.doneEdit(this.editingCell);
+								// 取消编辑状态后，整个编辑器会重新渲染
+								// 因此需要终止当前事件回调
+								// 触发渲染后新元素的事件回调
+								const newCell = activeDocument.querySelector(`#${tableId}${j}${k}`);
+								if (newCell instanceof HTMLTableCellElement)
+									newCell.click();
+								return;
+							}
 
 							// 先 parse
 							await this.tableEditor.parseActiveFile();
@@ -103,9 +114,8 @@ export default class MyPlugin extends Plugin {
 							// 使这个 cell 可编辑
 							cell.setAttr('contenteditable', true);
 
-							// 聚焦并点击
+							// 聚焦
 							cell.focus();
-							cell.click();
 
 							// 光标移动到最右侧
 							if (text != '')
@@ -115,7 +125,7 @@ export default class MyPlugin extends Plugin {
 							cell.style.backgroundColor = 'var(--bg1)';
 							cell.style.filter = 'brightness(1.5)';
 
-							// 将这个 cell 添加到编辑列表
+							// 将当前点击的 cell 设为正在编辑的 cell
 							this.editingCell = { tableId: this.hoverTableId, rowIndex: j, colIndex: k, cell };
 						}
 						cell.onkeydown = async (e) => {
@@ -136,7 +146,7 @@ export default class MyPlugin extends Plugin {
 								if (caretPos == 0) {
 									const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
 									if (cellLeft instanceof HTMLTableCellElement) {
-										await this.doneEdit();
+										await this.doneEdit(this.editingCell);
 										cellLeft.click();
 									}
 								} else { // 否则光标左移一个字符
@@ -154,7 +164,7 @@ export default class MyPlugin extends Plugin {
 								if (caretPos == cell.innerText.length) {
 									const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
 									if (cellRight instanceof HTMLTableCellElement) {
-										await this.doneEdit();
+										await this.doneEdit(this.editingCell);
 										cellRight.click();
 									}
 								} else { // 否则光标右移一个字符
@@ -182,7 +192,7 @@ export default class MyPlugin extends Plugin {
 								const { tableId, rowIndex, colIndex } = this.editingCell;
 								const cellAbove = activeDocument.querySelector(`#${tableId}${rowIndex - 1}${colIndex}`);
 								if (cellAbove instanceof HTMLTableCellElement) {
-									await this.doneEdit();
+									await this.doneEdit(this.editingCell);
 									cellAbove.click();
 								}
 								return;
@@ -195,7 +205,7 @@ export default class MyPlugin extends Plugin {
 								const { tableId, rowIndex, colIndex } = this.editingCell;
 								const cellBelow = activeDocument.querySelector(`#${tableId}${rowIndex + 1}${colIndex}`);
 								if (cellBelow instanceof HTMLTableCellElement) {
-									await this.doneEdit();
+									await this.doneEdit(this.editingCell);
 									cellBelow.click();
 								}
 								return;
@@ -209,7 +219,7 @@ export default class MyPlugin extends Plugin {
 								const { tableId, rowIndex, colIndex } = this.editingCell;
 								const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
 								if (cellLeft instanceof HTMLTableCellElement) {
-									await this.doneEdit();
+									await this.doneEdit(this.editingCell);
 									cellLeft.click();
 								}
 								return;
@@ -222,7 +232,7 @@ export default class MyPlugin extends Plugin {
 								const { tableId, rowIndex, colIndex } = this.editingCell;
 								const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
 								if (cellRight instanceof HTMLTableCellElement) {
-									await this.doneEdit();
+									await this.doneEdit(this.editingCell);
 									cellRight.click();
 								}
 								return;
@@ -238,6 +248,8 @@ export default class MyPlugin extends Plugin {
 			menu.addItem((item) => {
 				item.setTitle('Create 2x2 table');
 				item.onClick(async () => {
+					// 先 parse
+					await this.tableEditor.parseActiveFile();
 					await this.tableEditor.createMinimalNewTable();
 				})
 			});
@@ -294,27 +306,30 @@ export default class MyPlugin extends Plugin {
 
 	}
 
-	async doneEdit() {
-		if (!this.editingCell) return;
+	/**
+	 * 取消一个 cell 的编辑状态
+	 * @param cell 操作对象 cell
+	 */
+	async doneEdit(cell: Cell) {
 
-		const { rowIndex, colIndex, cell } = this.editingCell;
+		const { rowIndex, colIndex, cell: cellElem } = cell;
 		if (!this.hoverTableId)
 			return;
 
 		// 停止编辑
-		cell.setAttr('contenteditable', false);
+		cellElem.setAttr('contenteditable', false);
 
 		// 提交更改
 		await this.tableEditor.update(
 			this.hoverTableId,
 			rowIndex,
 			colIndex,
-			cell.innerText, // 加个空格以触发重新渲染
+			cellElem.innerText, // 加个空格以触发重新渲染
 		);
 
 		// 取消高亮
-		cell.style.backgroundColor = 'initial';
-		cell.style.filter = 'none';
+		cellElem.style.backgroundColor = 'initial';
+		cellElem.style.filter = 'none';
 
 		// 清空
 		this.editingCell = null;
