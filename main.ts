@@ -337,23 +337,27 @@ export default class MyPlugin extends Plugin {
 		this.editingCell = null;
 	}
 
-	// 计算表格索引 TODO 是否只取前几行 / 列
+	// 计算表格索引 TODO 是否只取前 n 个 cells
 	getIdentifier(table: HTMLTableElement) {
 		const result = [];
 		const rowNum = table.rows.length;
 		for (let i = 0; i < rowNum; i ++) {
 			const str = table.rows[i].cells[0].textContent;
-			if (str && str.trim() != '') {
+			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）
+			if (str && str.trim() != '' && !str.includes('!')) {
 				result.push(str.trim());
 			}
 		}
 		let i = table.rows[0].cells.length;
 		while (i --) {
 			const str = table.rows[0].cells[i].textContent;
-			if (str && str.trim() != '')
+			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）
+			if (str && str.trim() != '' && !str.includes('!'))
 				result.push(str.trim());
 		}
-		return String.fromCharCode(hashCode(result.join('')));
+		// 筛去 md 标记符号
+		const resultStr = result.join('').replace(/[*#\[\]!>`$=<]*/g, '');
+		return String.fromCharCode(hashCode(resultStr));
 	}
 
 	async forcePostProcessorReload() {

@@ -272,16 +272,20 @@ export class TableEditor {
 		const rowNum = table.cells.length;
 		for (let i = 0; i < rowNum; i ++) {
 			const str = table.cells[i][0];
-			if (str && str.trim() != '')
+			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）
+			if (str && str.trim() != '' && !str.includes('!'))
 				result.push(str.trim());
 		}
 		let i = table.cells[0].length;
 		while (i --) {
 			const str = table.cells[0][i];
-			if (str && str.trim() != '')
+			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）
+			if (str && str.trim() != '' && !str.includes('!'))
 				result.push(str.trim());
 		}
-		return  String.fromCharCode(hashCode(result.join('')));
+		// 筛去 md 标记符号
+		const resultStr = result.join('').replace(/[*#\[\]!>`$=<]*/g, '');
+		return String.fromCharCode(hashCode(resultStr));
 	}
 
 	private static rowCells2rowString(cells: string[]) {
