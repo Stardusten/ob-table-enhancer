@@ -144,9 +144,9 @@ export default class MyPlugin extends Plugin {
 								const { tableId, rowIndex, colIndex } = this.editingCell;
 								// 到最左端了，再按则跳到左边的 cell
 								if (caretPos == 0) {
+									await this.doneEdit(this.editingCell);
 									const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
 									if (cellLeft instanceof HTMLTableCellElement) {
-										await this.doneEdit(this.editingCell);
 										cellLeft.click();
 									}
 								} else { // 否则光标左移一个字符
@@ -162,9 +162,9 @@ export default class MyPlugin extends Plugin {
 								const { tableId, rowIndex, colIndex } = this.editingCell;
 								// 到最右端了，再按则跳到右边的 cell
 								if (caretPos == cell.innerText.length) {
+									await this.doneEdit(this.editingCell);
 									const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
 									if (cellRight instanceof HTMLTableCellElement) {
-										await this.doneEdit(this.editingCell);
 										cellRight.click();
 									}
 								} else { // 否则光标右移一个字符
@@ -190,9 +190,9 @@ export default class MyPlugin extends Plugin {
 							if (e.key == 'ArrowUp' && this.editingCell) {
 								e.preventDefault();
 								const { tableId, rowIndex, colIndex } = this.editingCell;
+								await this.doneEdit(this.editingCell);
 								const cellAbove = activeDocument.querySelector(`#${tableId}${rowIndex - 1}${colIndex}`);
 								if (cellAbove instanceof HTMLTableCellElement) {
-									await this.doneEdit(this.editingCell);
 									cellAbove.click();
 								}
 								return;
@@ -203,9 +203,9 @@ export default class MyPlugin extends Plugin {
 							if (e.key == 'ArrowDown' && this.editingCell) {
 								e.preventDefault();
 								const { tableId, rowIndex, colIndex } = this.editingCell;
+								await this.doneEdit(this.editingCell);
 								const cellBelow = activeDocument.querySelector(`#${tableId}${rowIndex + 1}${colIndex}`);
 								if (cellBelow instanceof HTMLTableCellElement) {
-									await this.doneEdit(this.editingCell);
 									cellBelow.click();
 								}
 								return;
@@ -217,9 +217,9 @@ export default class MyPlugin extends Plugin {
 							if (e.shiftKey && e.key == 'Tab' && this.editingCell) {
 								e.preventDefault();
 								const { tableId, rowIndex, colIndex } = this.editingCell;
+								await this.doneEdit(this.editingCell);
 								const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
 								if (cellLeft instanceof HTMLTableCellElement) {
-									await this.doneEdit(this.editingCell);
 									cellLeft.click();
 								}
 								return;
@@ -230,9 +230,9 @@ export default class MyPlugin extends Plugin {
 							if (e.key == 'Tab' && this.editingCell) {
 								e.preventDefault();
 								const { tableId, rowIndex, colIndex } = this.editingCell;
+								await this.doneEdit(this.editingCell);
 								const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
 								if (cellRight instanceof HTMLTableCellElement) {
-									await this.doneEdit(this.editingCell);
 									cellRight.click();
 								}
 								return;
