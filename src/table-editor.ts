@@ -28,6 +28,8 @@ export class TableEditor {
 		let existNonStandardTable = false;
 		for (let i = 0; i < len; i++) {
 			const row = this.rows[i];
+			if (row.startsWith('---'))
+				continue;
 			// 找到一个表格
 			const matchResult = row.match(formatRowRegex);
 			if (matchResult) {
@@ -68,7 +70,7 @@ export class TableEditor {
 	}
 
 	/**
-	 * 将不符合 parse 标准的语法的表格标准化
+	 * 将不符合 parse 标准的语法的表格标准化 (这里指行开头和结尾没有 |)
 	 * @param formatRowIndex 第几行是格式控制行
 	 * @param rows 所有行
 	 */

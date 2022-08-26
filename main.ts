@@ -136,6 +136,13 @@ export default class MyPlugin extends Plugin {
 
 							if (e.key == 'Enter') {
 								e.preventDefault();
+
+								// <c-enter> 正在编辑的 cell 退出编辑状态，并提交更改
+								// 然后下方新建行，并聚焦到下方的 cell
+								if (e.ctrlKey && this.editingCell) {
+									await this.doneEdit(this.editingCell);
+
+								}
 								return;
 							}
 
