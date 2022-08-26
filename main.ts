@@ -5,6 +5,7 @@ import {getCaretPosition, setCaretPosition} from "./src/html-utils";
 import {getRowNum, isSameCell} from "./src/table-utils";
 import {text} from "stream/consumers";
 import {hashCode} from "./src/editor-utils";
+import {ReferenceSuggestion} from "./src/reference-suggest";
 
 // Remember to rename these classes and interfaces!
 
@@ -28,6 +29,8 @@ export default class MyPlugin extends Plugin {
 	editingCell: Cell | null;
 	/** 当前指针在哪个 cell 上 */
 	hoverCell: Cell | null;
+	/** 提供双链补全的组件 */
+	suggestComponent: ReferenceSuggestion | null;
 
 	async onload() {
 		this.tableEditor = new TableEditor(this.app);
@@ -35,7 +38,39 @@ export default class MyPlugin extends Plugin {
 		this.editingCell = null;
 
 		this.app.workspace.onLayoutReady(() => {
+
+			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (markdownView) {
+				this.suggestComponent = new ReferenceSuggestion(this.app, markdownView.contentEl);
+			}
+
 			activeDocument.addEventListener('keydown', async (e) => {
+
+				// 如果补全插件处于触发状态，优先响应补全动作
+				if (this.suggestComponent && this.suggestComponent.isTriggered && this.editingCell) {
+					// 按上键选择上一个候选（没有选择候选，或者当前选择第一个候选，则选最最后一个候选）
+					if (e.key == 'ArrowUp') {
+						e.preventDefault();
+						e.stopPropagation();
+						this.suggestComponent.decSelectIndex();
+						return;
+					}
+					// 按下键选择下一个候选（没有选择候选，或者当前选择最后一个候选，则选择第一个候选）
+					if (e.key == 'ArrowDown') {
+						e.preventDefault();
+						e.stopPropagation();
+						this.suggestComponent.incSelectIndex();
+						return;
+					}
+					// 上屏
+					if (e.key == 'Enter') {
+						e.preventDefault();
+						e.stopPropagation();
+						const selected = this.suggestComponent.getSelected();
+						this.editingCell.cell.innerText = [this.editingCell.cell.innerText, '[[', selected, ']]'].join('');
+						return;
+					}
+				}
 
 				if (!this.editingCell)
 					return;
@@ -254,6 +289,15 @@ export default class MyPlugin extends Plugin {
 							// 将当前点击的 cell 设为正在编辑的 cell
 							this.editingCell = { tableId: this.hoverTableId, rowIndex: j, colIndex: k, cell };
 						}
+						cell.oninput = (e) => {
+							if (this.suggestComponent) {
+								const text = cell.innerText.slice(0, getCaretPosition(cell));
+								const matchResult = text.match(/\[\[([^\[\]]*)$/);
+								if (matchResult) {
+									this.suggestComponent.trigger(matchResult[1]);
+								} else this.suggestComponent.hide();
+							}
+						}
 					}
 				}
 			});
@@ -272,6 +316,7 @@ export default class MyPlugin extends Plugin {
 
 			if (!this.hoverCell || !this.hoverTableId)
 				return;
+
 			// 点选 menu 中的选项时，很可能会移出 cell，因此这里将触发时所在 cell 的 rowIndex 和 colIndex，还有 hoverTableId 先记录下来
 			const hoverCellRowIndex = this.hoverCell.rowIndex;
 			const hoverCellColIndex = this.hoverCell.colIndex;
@@ -354,23 +399,24 @@ export default class MyPlugin extends Plugin {
 		const result = [];
 		const rowNum = table.rows.length;
 		for (let i = 0; i < rowNum; i ++) {
-			const str = table.rows[i].cells[0].innerHTML;
+			const str = table.rows[i].cells[0].innerHTML.replace(/&nbsp;/gi,'');
 			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
-			if (str && str.trim() != '' && !str.match(/[!<>]/)) {
+			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/)) {
 				result.push(str.trim());
 			}
 		}
 		let i = table.rows[0].cells.length;
 		while (i --) {
-			const str = table.rows[0].cells[i].innerHTML;
+			const str = table.rows[0].cells[i].innerHTML.replace(/&nbsp;/gi,'');
 			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
-			if (str && str.trim() != '' && !str.match(/[!<>]/))
+			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/))
 				result.push(str.trim());
 		}
 		// 筛去 md 标记符号
-		const resultStr = result.join('').replace(/[*#\[\]!`$=]/g, '');
+		const resultStr = result.join('');
+		console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 
