@@ -15,24 +15,28 @@
 2. 编辑单元格时，单元格内是 Markdown 源码，退出编辑模式时会自动渲染。
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252046274.gif)
+   
+3. 单元格内可放置任何与表格语法不冲突的元素，比如 html 标签，图片等
 
-3. 上 / 下方向键、Tab 和 Shift-Tab 可更改编辑焦点为上 / 下 / 左 / 右侧单元格
+	![ob-plugin](https://user-images.githubusercontent.com/38722307/186895602-d3ca0b99-dc99-4e34-8e16-003b3643c4f2.gif)
+
+4. 上 / 下方向键、Tab 和 Shift-Tab 可更改编辑焦点为上 / 下 / 左 / 右侧单元格
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252049575.gif)
 
-4. 左 / 右方向键可以移动光标，在光标位于开头和结尾时按键将更改编辑焦点为左侧 / 右侧单元格
+5. 左 / 右方向键可以移动光标，在光标位于开头和结尾时按键将更改编辑焦点为左侧 / 右侧单元格
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252052416.gif)
 
-5. 删除行
+6. 删除行
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252056998.gif)
 
-6. 删除列
+7. 删除列
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252055477.gif)
 
-7. 当前行下方插入新行
+8. 当前行下方插入新行
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252059685.gif)
 
