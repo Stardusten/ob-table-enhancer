@@ -355,6 +355,7 @@ export default class MyPlugin extends Plugin {
 		const rowNum = table.rows.length;
 		for (let i = 0; i < rowNum; i ++) {
 			const str = table.rows[i].cells[0].innerHTML;
+			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
 			if (str && str.trim() != '' && !str.match(/[!<>]/)) {
 				result.push(str.trim());
@@ -363,6 +364,7 @@ export default class MyPlugin extends Plugin {
 		let i = table.rows[0].cells.length;
 		while (i --) {
 			const str = table.rows[0].cells[i].innerHTML;
+			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
 			if (str && str.trim() != '' && !str.match(/[!<>]/))
 				result.push(str.trim());

@@ -306,6 +306,7 @@ export class TableEditor {
 		const rowNum = table.cells.length;
 		for (let i = 0; i < rowNum; i ++) {
 			const str = table.cells[i][0];
+			// console.log('' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
 			if (str && str.trim() != '' && !str.match(/[!<>]/))
 				result.push(str.trim());
@@ -313,12 +314,14 @@ export class TableEditor {
 		let i = table.cells[0].length;
 		while (i --) {
 			const str = table.cells[0][i];
+			// console.log('' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
 			if (str && str.trim() != '' && !str.match(/[!<>]/))
 				result.push(str.trim());
 		}
 		// 筛去 md 标记符号
 		const resultStr = result.join('').replace(/[*#\[\]!`$=]/g, '');
+		// console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 
