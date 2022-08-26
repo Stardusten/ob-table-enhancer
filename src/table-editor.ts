@@ -281,7 +281,6 @@ export class TableEditor {
 			if (str && str.trim() != '')
 				result.push(str.trim());
 		}
-		console.log(result.join(''));
 		return  String.fromCharCode(hashCode(result.join('')));
 	}
 
