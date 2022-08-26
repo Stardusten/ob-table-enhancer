@@ -36,10 +36,131 @@ export default class MyPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			activeDocument.addEventListener('keydown', async (e) => {
+
+				if (!this.editingCell)
+					return;
+				const cell = this.editingCell.cell;
+
+				// <shift-enter> 单元格内换行，md 语法应该是插入一个 <br> 标签
+				if (!e.repeat && e.key == 'Enter' && e.shiftKey && this.editingCell) {
+					cell.innerText = cell.innerText + '<br>';
+					return;
+				}
+
 				// 按下 Esc 或 Enter 时，正在编辑的 cell 退出编辑状态，并提交更改
-				if ((e.key == 'Enter' || e.key == 'Escape') && this.editingCell)
+				if (!e.repeat && (e.key == 'Enter' || e.key == 'Escape')) {
+					e.preventDefault();
 					await this.doneEdit(this.editingCell);
-			});
+					return;
+				}
+
+				// 按左键
+				if (e.key == 'ArrowLeft') {
+					e.preventDefault();
+					e.stopPropagation();
+					const caretPos = getCaretPosition(cell);
+					const { tableId, rowIndex, colIndex } = this.editingCell;
+					// 到最左端了，再按则跳到左边的 cell
+					if (caretPos == 0) {
+						await this.doneEdit(this.editingCell);
+						const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
+						if (cellLeft instanceof HTMLTableCellElement) {
+							cellLeft.click();
+						}
+					} else { // 否则光标左移一个字符
+						setCaretPosition(cell, caretPos - 1);
+					}
+					return;
+				}
+
+				// 按右键
+				if (e.key == 'ArrowRight') {
+					e.preventDefault();
+					e.stopPropagation();
+					const caretPos = getCaretPosition(cell);
+					const { tableId, rowIndex, colIndex } = this.editingCell;
+					// 到最右端了，再按则跳到右边的 cell
+					if (caretPos == cell.innerText.length) {
+						await this.doneEdit(this.editingCell);
+						const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
+						if (cellRight instanceof HTMLTableCellElement) {
+							cellRight.click();
+						}
+					} else { // 否则光标右移一个字符
+						setCaretPosition(cell, caretPos + 1);
+					}
+					return;
+				}
+
+				// 提供 <c-a> 全选
+				if (!e.repeat && e.ctrlKey && e.key == 'a') {
+					e.preventDefault();
+					e.stopPropagation();
+					const selection = activeWindow.getSelection();
+					const range = activeDocument.createRange();
+					range.selectNodeContents(cell);
+					selection?.removeAllRanges();
+					selection?.addRange(range);
+					return;
+				}
+
+				// 按上键，正在编辑的 cell 退出编辑状态，并提交更改
+				// 然后开始编辑这个 cell 上方的 cell （如果存在）
+				if (e.key == 'ArrowUp') {
+					e.preventDefault();
+					e.stopPropagation();
+					const { tableId, rowIndex, colIndex } = this.editingCell;
+					await this.doneEdit(this.editingCell);
+					const cellAbove = activeDocument.querySelector(`#${tableId}${rowIndex - 1}${colIndex}`);
+					if (cellAbove instanceof HTMLTableCellElement) {
+						cellAbove.click();
+					}
+					return;
+				}
+
+				// 按下键，正在编辑的 cell 退出编辑状态，并提交更改
+				// 然后开始编辑这个 cell 下方的 cell （如果存在）
+				if (e.key == 'ArrowDown') {
+					e.preventDefault();
+					e.stopPropagation();
+					const { tableId, rowIndex, colIndex } = this.editingCell;
+					await this.doneEdit(this.editingCell);
+					const cellBelow = activeDocument.querySelector(`#${tableId}${rowIndex + 1}${colIndex}`);
+					if (cellBelow instanceof HTMLTableCellElement) {
+						cellBelow.click();
+					}
+					return;
+				}
+
+				// 按 Shift + Tab，正在编辑的 cell 退出编辑状态，并提交更改
+				// 然后开始编辑这个 cell 右侧的 cell （如果存在）
+				// 注意要先捕获组合键
+				if (e.shiftKey && e.key == 'Tab') {
+					e.preventDefault();
+					e.stopPropagation();
+					const { tableId, rowIndex, colIndex } = this.editingCell;
+					await this.doneEdit(this.editingCell);
+					const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
+					if (cellLeft instanceof HTMLTableCellElement) {
+						cellLeft.click();
+					}
+					return;
+				}
+
+				// 按 Tab，正在编辑的 cell 退出编辑状态，并提交更改
+				// 然后开始编辑这个 cell 左侧的 cell （如果存在）
+				if (e.key == 'Tab') {
+					e.preventDefault();
+					e.stopPropagation();
+					const { tableId, rowIndex, colIndex } = this.editingCell;
+					await this.doneEdit(this.editingCell);
+					const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
+					if (cellRight instanceof HTMLTableCellElement) {
+						cellRight.click();
+					}
+					return;
+				}
+			})
 
 			// 如果没有 hover 任何 cell，或者正在编辑的 cell 不是 hover 的 cell
 			// 正在编辑的 cell 退出编辑状态，并提交更改
@@ -63,7 +184,7 @@ export default class MyPlugin extends Plugin {
 			const tables = element.querySelectorAll('table');
 			tables.forEach((table) => {
 				const tableId = this.getIdentifier(table);
-				console.log(tableId);
+				// console.log(tableId);
 				// 监听当前 hover 的 table
 				table.onmouseenter = (e) => this.hoverTableId = tableId;
 				// 点击表格不再转换为源码编辑模式
@@ -132,123 +253,6 @@ export default class MyPlugin extends Plugin {
 
 							// 将当前点击的 cell 设为正在编辑的 cell
 							this.editingCell = { tableId: this.hoverTableId, rowIndex: j, colIndex: k, cell };
-						}
-						cell.onkeydown = async (e) => {
-
-							// console.log(e);
-
-							if (e.key == 'Enter') {
-								e.preventDefault();
-
-								// <c-enter> 正在编辑的 cell 退出编辑状态，并提交更改
-								// 然后下方新建行，并聚焦到下方的 cell
-								if (e.ctrlKey && this.editingCell) {
-									await this.doneEdit(this.editingCell);
-
-								}
-								return;
-							}
-
-							// 按左键
-							if (e.key == 'ArrowLeft' && this.editingCell) {
-								e.preventDefault();
-								const caretPos = getCaretPosition(cell);
-								const { tableId, rowIndex, colIndex } = this.editingCell;
-								// 到最左端了，再按则跳到左边的 cell
-								if (caretPos == 0) {
-									await this.doneEdit(this.editingCell);
-									const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
-									if (cellLeft instanceof HTMLTableCellElement) {
-										cellLeft.click();
-									}
-								} else { // 否则光标左移一个字符
-									setCaretPosition(cell, caretPos - 1);
-								}
-								return;
-							}
-
-							// 按右键
-							if (e.key == 'ArrowRight' && this.editingCell) {
-								e.preventDefault();
-								const caretPos = getCaretPosition(cell);
-								const { tableId, rowIndex, colIndex } = this.editingCell;
-								// 到最右端了，再按则跳到右边的 cell
-								if (caretPos == cell.innerText.length) {
-									await this.doneEdit(this.editingCell);
-									const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
-									if (cellRight instanceof HTMLTableCellElement) {
-										cellRight.click();
-									}
-								} else { // 否则光标右移一个字符
-									setCaretPosition(cell, caretPos + 1);
-								}
-								return;
-							}
-
-							// 提供 <c-a> 全选
-							if (!e.repeat && e.ctrlKey && e.key == 'a') {
-								// console.log('<c-a> detected');
-								e.preventDefault();
-								const selection = activeWindow.getSelection();
-								const range = activeDocument.createRange();
-								range.selectNodeContents(cell);
-								selection?.removeAllRanges();
-								selection?.addRange(range);
-								return;
-							}
-
-							// 按上键，正在编辑的 cell 退出编辑状态，并提交更改
-							// 然后开始编辑这个 cell 上方的 cell （如果存在）
-							if (e.key == 'ArrowUp' && this.editingCell) {
-								e.preventDefault();
-								const { tableId, rowIndex, colIndex } = this.editingCell;
-								await this.doneEdit(this.editingCell);
-								const cellAbove = activeDocument.querySelector(`#${tableId}${rowIndex - 1}${colIndex}`);
-								if (cellAbove instanceof HTMLTableCellElement) {
-									cellAbove.click();
-								}
-								return;
-							}
-
-							// 按下键，正在编辑的 cell 退出编辑状态，并提交更改
-							// 然后开始编辑这个 cell 下方的 cell （如果存在）
-							if (e.key == 'ArrowDown' && this.editingCell) {
-								e.preventDefault();
-								const { tableId, rowIndex, colIndex } = this.editingCell;
-								await this.doneEdit(this.editingCell);
-								const cellBelow = activeDocument.querySelector(`#${tableId}${rowIndex + 1}${colIndex}`);
-								if (cellBelow instanceof HTMLTableCellElement) {
-									cellBelow.click();
-								}
-								return;
-							}
-
-							// 按 Shift + Tab，正在编辑的 cell 退出编辑状态，并提交更改
-							// 然后开始编辑这个 cell 右侧的 cell （如果存在）
-							// 注意要先捕获组合键
-							if (e.shiftKey && e.key == 'Tab' && this.editingCell) {
-								e.preventDefault();
-								const { tableId, rowIndex, colIndex } = this.editingCell;
-								await this.doneEdit(this.editingCell);
-								const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
-								if (cellLeft instanceof HTMLTableCellElement) {
-									cellLeft.click();
-								}
-								return;
-							}
-
-							// 按 Tab，正在编辑的 cell 退出编辑状态，并提交更改
-							// 然后开始编辑这个 cell 左侧的 cell （如果存在）
-							if (e.key == 'Tab' && this.editingCell) {
-								e.preventDefault();
-								const { tableId, rowIndex, colIndex } = this.editingCell;
-								await this.doneEdit(this.editingCell);
-								const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
-								if (cellRight instanceof HTMLTableCellElement) {
-									cellRight.click();
-								}
-								return;
-							}
 						}
 					}
 				}
@@ -350,21 +354,21 @@ export default class MyPlugin extends Plugin {
 		const result = [];
 		const rowNum = table.rows.length;
 		for (let i = 0; i < rowNum; i ++) {
-			const str = table.rows[i].cells[0].textContent;
-			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）
-			if (str && str.trim() != '' && !str.includes('!')) {
+			const str = table.rows[i].cells[0].innerHTML;
+			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
+			if (str && str.trim() != '' && !str.match(/[!<>]/)) {
 				result.push(str.trim());
 			}
 		}
 		let i = table.rows[0].cells.length;
 		while (i --) {
-			const str = table.rows[0].cells[i].textContent;
-			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）
-			if (str && str.trim() != '' && !str.includes('!'))
+			const str = table.rows[0].cells[i].innerHTML;
+			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
+			if (str && str.trim() != '' && !str.match(/[!<>]/))
 				result.push(str.trim());
 		}
 		// 筛去 md 标记符号
-		const resultStr = result.join('').replace(/[*#\[\]!>`$=<]*/g, '');
+		const resultStr = result.join('').replace(/[*#\[\]!`$=]/g, '');
 		return String.fromCharCode(hashCode(resultStr));
 	}
 
