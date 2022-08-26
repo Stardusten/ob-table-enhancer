@@ -33,27 +33,30 @@ export default class MyPlugin extends Plugin {
 		this.tableEditor = new TableEditor(this.app);
 
 		this.editingCell = null;
-		activeDocument.addEventListener('keydown', async (e) => {
-			// 按下 Esc 或 Enter 时，正在编辑的 cell 退出编辑状态，并提交更改
-			if ((e.key == 'Enter' || e.key == 'Escape') && this.editingCell)
-				await this.doneEdit(this.editingCell);
-		});
 
-		// 如果没有 hover 任何 cell，或者正在编辑的 cell 不是 hover 的 cell
-		// 正在编辑的 cell 退出编辑状态，并提交更改
-		activeDocument.addEventListener('click', async () => {
-			if (this.editingCell && !isSameCell(this.hoverCell, this.editingCell)) {
-				await this.doneEdit(this.editingCell);
-			}
-		});
+		this.app.workspace.onLayoutReady(() => {
+			activeDocument.addEventListener('keydown', async (e) => {
+				// 按下 Esc 或 Enter 时，正在编辑的 cell 退出编辑状态，并提交更改
+				if ((e.key == 'Enter' || e.key == 'Escape') && this.editingCell)
+					await this.doneEdit(this.editingCell);
+			});
 
-		// 监听 ctrl
-		this.ctrl = false;
-		activeDocument.addEventListener('keydown', (e) => {
-			if (e.key == 'Ctrl') this.ctrl = true;
-		});
-		activeDocument.addEventListener('keyup', (e) => {
-			if (e.key == 'Ctrl') this.ctrl = false;
+			// 如果没有 hover 任何 cell，或者正在编辑的 cell 不是 hover 的 cell
+			// 正在编辑的 cell 退出编辑状态，并提交更改
+			activeDocument.addEventListener('click', async () => {
+				if (this.editingCell && !isSameCell(this.hoverCell, this.editingCell)) {
+					await this.doneEdit(this.editingCell);
+				}
+			});
+
+			// 监听 ctrl
+			this.ctrl = false;
+			activeDocument.addEventListener('keydown', (e) => {
+				if (e.key == 'Ctrl') this.ctrl = true;
+			});
+			activeDocument.addEventListener('keyup', (e) => {
+				if (e.key == 'Ctrl') this.ctrl = false;
+			});
 		});
 
 		this.registerMarkdownPostProcessor((element, context) => {
@@ -311,9 +314,7 @@ export default class MyPlugin extends Plugin {
 		}));
 	}
 
-	onunload() {
-
-	}
+	onunload() {}
 
 	/**
 	 * 取消一个 cell 的编辑状态
