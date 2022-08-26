@@ -4,6 +4,7 @@ import {Cell} from "./src/table";
 import {getCaretPosition, setCaretPosition} from "./src/html-utils";
 import {getRowNum, isSameCell} from "./src/table-utils";
 import {text} from "stream/consumers";
+import {hashCode} from "./src/editor-utils";
 
 // Remember to rename these classes and interfaces!
 
@@ -59,6 +60,7 @@ export default class MyPlugin extends Plugin {
 			const tables = element.querySelectorAll('table');
 			tables.forEach((table) => {
 				const tableId = this.getIdentifier(table);
+				console.log(tableId);
 				// 监听当前 hover 的 table
 				table.onmouseenter = (e) => this.hoverTableId = tableId;
 				// 点击表格不再转换为源码编辑模式
@@ -335,14 +337,24 @@ export default class MyPlugin extends Plugin {
 		this.editingCell = null;
 	}
 
-	// 第一列所有元素 trim 后 join，然后只保留字母
+	// 计算表格索引 TODO 是否只取前几行 / 列
 	getIdentifier(table: HTMLTableElement) {
 		const result = [];
-		for (let i = 0; i < table.rows.length; i ++) {
-			const str = table.rows[i].cells[0].textContent || '';
-			result.push(str.trim());
+		const rowNum = table.rows.length;
+		for (let i = 0; i < rowNum; i ++) {
+			const str = table.rows[i].cells[0].textContent;
+			if (str && str.trim() != '') {
+				result.push(str.trim());
+			}
 		}
-		return result.join('').replace(/[^a-zA-Z]/gi, '');
+		let i = table.rows[0].cells.length;
+		while (i --) {
+			const str = table.rows[0].cells[i].textContent;
+			if (str && str.trim() != '')
+				result.push(str.trim());
+		}
+		console.log(result.join(''));
+		return String.fromCharCode(hashCode(result.join('')));
 	}
 
 	async forcePostProcessorReload() {

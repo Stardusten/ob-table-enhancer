@@ -1,6 +1,6 @@
 import {Table} from "./table";
 import {App, MarkdownView, Notice, TFile} from "obsidian";
-import {deleteLine, deleteLines, insertLineBelow, insertLineBelowWithText} from "./editor-utils";
+import {deleteLine, deleteLines, hashCode, insertLineBelow, insertLineBelowWithText} from "./editor-utils";
 
 export class TableEditor {
 
@@ -50,6 +50,7 @@ export class TableEditor {
 				this.tables.set(TableEditor.getIdentifier(table), table);
 			}
 		}
+		console.log(this.tables);
 	}
 
 	// private async writeBackActiveFile() {
@@ -268,11 +269,20 @@ export class TableEditor {
 	// 第一列所有元素 trim 后 join，然后只保留字母
 	private static getIdentifier(table: Table) {
 		const result = [];
-		for (let i = 0; i < table.cells.length; i ++) {
+		const rowNum = table.cells.length;
+		for (let i = 0; i < rowNum; i ++) {
 			const str = table.cells[i][0];
-			result.push(str.trim());
+			if (str && str.trim() != '')
+				result.push(str.trim());
 		}
-		return result.join('').replace(/[^a-zA-Z]/gi, '');
+		let i = table.cells[0].length;
+		while (i --) {
+			const str = table.cells[0][i];
+			if (str && str.trim() != '')
+				result.push(str.trim());
+		}
+		console.log(result.join(''));
+		return  String.fromCharCode(hashCode(result.join('')));
 	}
 
 	private static rowCells2rowString(cells: string[]) {
