@@ -6,11 +6,17 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
-.ob-table-enhancer-suggestion {
-	position: absolute;
-	top: 100px;
-	left: 0;
-	width: 300px;
-	height: 300px;
-	/*background-color: brown;*/
-}
+/*.ob-table-enhancer .suggestion-container {*/
+/*	position: absolute;*/
+/*	width: 300px;*/
+/*	height: fit-content;*/
+/*}*/
+
+/*.ob-table-enhancer .suggestion-content {*/
+/*	max-height: 300px;*/
+/*	overflow-y: scroll;*/
+/*}*/
+
+/*.suggestion-item {*/
+/*	display: block;*/
+/*}*/

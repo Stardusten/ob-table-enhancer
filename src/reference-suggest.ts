@@ -1,110 +1,283 @@
-import {App, prepareFuzzySearch} from "obsidian";
-import {create} from "domain";
+import {App, MarkdownView, prepareFuzzySearch, SearchMatches, SearchResult, TFile} from "obsidian";
+import {getCaretPosition, getCaretRect, setCaretPosition} from "./html-utils";
+import {deleteLines} from "./editor-utils";
 
-export class ReferenceSuggestion {
+export interface FuzzySuggestion {
+	/** 补全窗口里显示的内容 */
+	display: string,
+	/** 插入的内容 */
+	replaceString: string;
+	/** 匹配的部分，一个数组，每个元素是一个长为 2 的数组
+	 * 表示匹配 displayString 中的一段子串 */
+	matched: SearchMatches;
+	/** 匹配得分 */
+	score: number,
+}
+
+export abstract class SuggestionPopper<T> {
 
 	app: App;
-	suggestContainerEl: HTMLDivElement;
-	suggestContentEl: HTMLDivElement;
-	private candidates: string[];
-	private matchResult: any;
+	/** 为哪个元素提供补全 */
+	outerEl: HTMLElement;
+	// <suggestion-container>
+	//   <suggestion>
+	containerEl: HTMLElement;
+	suggestionEl: HTMLElement;
+	/** 所有候选 */
+	protected candidates: T[];
+	/** 所有补全建议 */
+	protected fuzzySuggestions: FuzzySuggestion[];
+	/** 补全是否被触发 */
 	isTriggered: boolean;
-	private selectedIndex: number;
+	/** 当前选中的候选下标 */
+	selectedIndex: number;
 
-	constructor(app: App, contentEl: HTMLElement) {
+	constructor(app: App) {
 		this.app = app;
-		this.suggestContainerEl = createDiv({ cls: 'ob-table-enhancer-suggestion suggestion '});
-		this.suggestContentEl = this.suggestContainerEl.createDiv({ cls: 'suggestion-content' });
-		contentEl.appendChild(this.suggestContainerEl);
+		// 补全窗口直接插入到 <body</body>
+		this.containerEl = activeDocument.body.createDiv({ cls: 'ob-table-enhancer suggestion-container' });
+		this.suggestionEl = this.containerEl.createDiv({ cls: 'ob-table-enhancer suggestion' });
 
 		// 默认隐藏
+		this.containerEl.style.display = 'none';
 		this.isTriggered = false;
-		this.hide();
 	}
+
+	/** 如何从一个候选获得用于匹配的的 string */
+	abstract getQueryString(item: T): string;
+	/** 如何从一个候选获得补全窗口里显示的 html string */
+	abstract getDisplay(item: T, queryString: string, searchResult: SearchResult): string;
+	/** 如何从一个候选获得用于替换的 string */
+	abstract getReplaceString(item: T): string;
+	/** 更新候选 */
+	abstract updateCandidates(): void | Promise<void>;
+	/** 注册相关事件 */
+	abstract registerEvents(): void;
 
 	/**
-	 * 更新所有候选
-	 * @private
+	 * 绑定要补全的 element
+	 * @param outerEl
 	 */
-	private updateCandidates() {
-		const markdownFiles = this.app.vault.getMarkdownFiles();
-		this.candidates = markdownFiles.map((f) => f.basename);
-	}
-
-	hide() {
-		// 设置未触发状态
-		this.isTriggered = false;
-		this.suggestContentEl.style.display = 'none';
-	}
-
-	incSelectIndex() {
-		const len = this.suggestContentEl.children.length;
-		// 移除原有选中样式
-		this.suggestContentEl.children[this.selectedIndex]?.classList.remove('is-selected');
-		// 循环
-		if (this.selectedIndex >= len - 1)
-			this.selectedIndex = 0;
-		else this.selectedIndex ++;
-		// 添加新的选中样式
-		this.suggestContentEl.children[this.selectedIndex].classList.add('is-selected');
-	}
-
-	decSelectIndex() {
-		const len = this.suggestContentEl.children.length;
-		// 移除原有选中样式
-		this.suggestContentEl.children[this.selectedIndex]?.classList.remove('is-selected');
-		// 循环
-		if (this.selectedIndex <= 0)
-			this.selectedIndex = len - 1;
-		else this.selectedIndex --;
-		// 添加新的选中样式
-		this.suggestContentEl.children[this.selectedIndex].classList.add('is-selected');
-	}
-
-	getSelected() {
-		return this.matchResult[this.selectedIndex].text;
+	bindOuterEl(outerEl: HTMLElement) {
+		this.outerEl = outerEl;
+		this.registerEvents();
 	}
 
 	/**
 	 * 触发补全
 	 */
-	trigger(queryPattern: string) {
-		// 设置触发状态
-		this.isTriggered = true;
+	onTrigger = (queryPattern: string) => {
 
-		// TODO
 		if (!this.candidates)
 			this.updateCandidates();
 
-		// 先清空所有候选
-		this.suggestContentEl.innerHTML = '';
+		// 设置触发状态
+		this.isTriggered = true;
 
+		// 清空所有候选
+		this.suggestionEl.innerHTML = '';
+
+		// 计算所有候选与传入模式的匹配程度，得到所有补全建议
 		const fuzzySearchFunc = prepareFuzzySearch(queryPattern);
-		this.matchResult = this.candidates
-			.map((candidate: string, i: number) => {
-				const searchResult = fuzzySearchFunc.call(null, candidate);
-				return searchResult == null
-					? null
-					: { ...searchResult, i };
+		this.fuzzySuggestions = this.candidates
+			.map((c, i): FuzzySuggestion | null => {
+				const queryString = this.getQueryString(c);
+				const searchResult = fuzzySearchFunc.call(null, queryString);
+				return searchResult ?
+					{
+						display: this.getDisplay(c, queryString, searchResult),
+						replaceString: this.getReplaceString(c),
+						matched: searchResult.matched,
+						score: searchResult.score
+					} : null;
 			})
-			.filter((e) => e != null)
-			.sort((e1, e2) => e1.score - e2.score)
-			.map((e) => { return { text: this.candidates[e.i], matches: e.matches}; });
+			.filter((o): o is FuzzySuggestion => o != null)
+			.sort((e1, e2) => e2.score - e1.score);
 
-		// console.log(this.matchResult);
+		// 计算补全窗口弹出位置
+		// 由于补全窗口被插入到 body 里面，因此直接使用绝对位置
+		// 先计算光标位置
+		const caretRect = getCaretRect(this.containerEl)!;
+		// 再获得输入框的高度
+		const outerRect = this.outerEl.getBoundingClientRect();
+		this.containerEl.style.left = `${caretRect.left}px`;
+		this.containerEl.style.top = `${caretRect.top + outerRect.height}px`;
+		this.containerEl.style.display = 'block'; // TODO detach() better?
 
-		// 添加候选到弹出的补全窗口
-		for (const candidate of this.matchResult) {
-			this.suggestContentEl.createDiv({
-				text: candidate.text,
-				cls: 'suggestion-item',
-			});
+		// 添加所有补全建议到补全窗口
+		for (const suggestion of this.fuzzySuggestions) {
+			this.suggestionEl.createDiv({ cls: 'suggestion-item mod-complex'} ,(div) => div.innerHTML = suggestion.display);
 		}
 
 		// 默认不选中
 		this.selectedIndex = -1;
+	}
 
-		this.suggestContentEl.style.display = 'block';
-		// console.log(this.suggestContentEl);
+	/**
+	 * 选中下一个补全建议
+	 */
+	protected selectNext = () => {
+		const len = this.suggestionEl.children.length;
+		// 移除之前选中项的样式
+		this.suggestionEl.children[this.selectedIndex]?.classList.remove('is-selected');
+		// 循环
+		if (this.selectedIndex >= len - 1)
+			this.selectedIndex = 0;
+		else this.selectedIndex ++;
+		// 添加新的选中样式
+		// 添加新的选中样式
+		const selectedElem = this.suggestionEl.children[this.selectedIndex];
+		selectedElem.classList.add('is-selected');
+		// 选中元素保持在可见范围
+		selectedElem.scrollIntoView(false);
+	}
+
+	/**
+	 * 选中上一个补全建议
+	 */
+	protected selectPrev = () => {
+		const len = this.suggestionEl.children.length;
+		// 移除原有选中样式
+		this.suggestionEl.children[this.selectedIndex]?.classList.remove('is-selected');
+		// 循环
+		if (this.selectedIndex <= 0)
+			this.selectedIndex = len - 1;
+		else this.selectedIndex --;
+		// 添加新的选中样式
+		const selectedElem = this.suggestionEl.children[this.selectedIndex];
+		selectedElem.classList.add('is-selected');
+		// 选中元素保持在可见范围
+		selectedElem.scrollIntoView(false);
+	}
+
+	/**
+	 * 应用当前选中的补全建议
+	 */
+	protected applySuggestion = () => {
+		const selectSuggestion = this.fuzzySuggestions[this.selectedIndex];
+		// 光标位置
+		const caretPosition = getCaretPosition(this.outerEl);
+		// 从开头到光标位置所在的字串
+		const beg2caret = this.outerEl.innerText.slice(0, caretPosition);
+		// 从开头位置到结束的字串
+		const caret2end = this.outerEl.innerText.slice(caretPosition + 1);
+		const afterApply = beg2caret.replace(/\[\[([^\[\]]*)$/, selectSuggestion.replaceString);
+		this.outerEl.innerHTML = [afterApply, caret2end].join('');
+		// 移动光标
+		setCaretPosition(this.outerEl, afterApply.length);
+		// 补全完后隐藏
+		this.containerEl.style.display = 'none';
+		this.isTriggered = false;
+		return;
+	}
+}
+
+export class ReferenceSuggestionPopper extends SuggestionPopper<TFile> {
+
+	getDisplay(item: TFile, queryString: string, searchResult: SearchResult): string {
+		let i = 0;
+		const result = [];
+		result.push('<div class="suggestion-content">');
+		// 标题
+		result.push('<div class="suggestion-title">');
+		for (const [j1, j2] of searchResult.matches) {
+			// [i, j1) 未匹配中
+			result.push('<span>');
+			result.push(queryString.slice(i, j1));
+			result.push('</span>');
+			// [j1, j2) 匹配中，添加相应样式
+			result.push('<span class="suggestion-highlight">');
+			result.push(queryString.slice(j1, j2));
+			result.push('</span>');
+			i = j2; // 更新 j2
+		}
+		// 处理最后可能出现的不匹配串
+		result.push('<span>');
+		result.push(queryString.slice(i));
+		result.push('</span>');
+		result.push('</div>');
+		// 路径提示
+		if (item.parent.path != '') {
+			result.push('<div class="suggestion-note">');
+			result.push(item.parent.path);
+			result.push('</div>');
+		}
+		result.push('</div>');
+		return result.join('');
+	}
+
+	getQueryString(item: TFile): string {
+		return item.basename;
+	}
+
+	getReplaceString(item: TFile): string {
+		const activeFile = this.app.workspace.getActiveFile()!;
+		return this.app.fileManager.generateMarkdownLink(item, activeFile.path);
+	}
+
+	registerEvents(): void {
+		const oldInput = this.outerEl.oninput;
+		this.outerEl.oninput = (e) => {
+			const caretPosition = getCaretPosition(this.outerEl);
+			const text = this.outerEl.innerText.slice(0, caretPosition);
+			const matchResult = text.match(/\[\[([^\[\]]*)$/);
+			if (matchResult) {
+				this.onTrigger(matchResult[1]);
+			} else {
+				// 不符合触发规则
+				this.containerEl.style.display = 'none';
+			}
+			// 执行旧的回调
+			if (oldInput)
+			{ // @ts-ignore
+				oldInput(e);
+			}
+		};
+		const oldKeydown = this.outerEl.onkeydown;
+		this.outerEl.onkeydown = (e) => {
+			// 如果补全插件处于触发状态，优先响应补全动作
+			if (this.isTriggered) {
+				// 按上键选择上一个候选（没有选择候选，或者当前选择第一个候选，则选最最后一个候选）
+				if (e.key == 'ArrowUp') {
+					e.preventDefault();
+					e.stopPropagation();
+					this.selectPrev();
+					return;
+				}
+				// 按下键选择下一个候选（没有选择候选，或者当前选择最后一个候选，则选择第一个候选）
+				if (e.key == 'ArrowDown') {
+					e.preventDefault();
+					e.stopPropagation();
+					this.selectNext();
+					return;
+				}
+				// 上屏
+				if (e.key == 'Enter') {
+					e.preventDefault();
+					e.stopPropagation();
+					this.applySuggestion();
+					return;
+				}
+			}
+			// 执行旧的回调
+			if (oldKeydown)
+				{ // @ts-ignore
+					oldKeydown(e);
+				}
+		}
+		const oldBlur = this.outerEl.onblur;
+		this.outerEl.on = (e) => {
+			// 失焦时隐藏
+			this.containerEl.style.display = 'hide';
+			this.isTriggered = false;
+			if (oldBlur) { // @ts-ignore
+				oldBlur(e);
+			}
+		}
+		this.app.metadataCache.on('resolved', () => this.updateCandidates);
+	}
+
+	updateCandidates(): void | Promise<void> {
+		this.candidates = this.app.vault.getMarkdownFiles();
 	}
 }

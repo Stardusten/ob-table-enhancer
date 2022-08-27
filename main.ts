@@ -5,7 +5,7 @@ import {getCaretPosition, setCaretPosition} from "./src/html-utils";
 import {getRowNum, isSameCell} from "./src/table-utils";
 import {text} from "stream/consumers";
 import {hashCode} from "./src/editor-utils";
-import {ReferenceSuggestion} from "./src/reference-suggest";
+import {ReferenceSuggestionPopper} from "./src/reference-suggest";
 
 // Remember to rename these classes and interfaces!
 
@@ -30,7 +30,7 @@ export default class MyPlugin extends Plugin {
 	/** 当前指针在哪个 cell 上 */
 	hoverCell: Cell | null;
 	/** 提供双链补全的组件 */
-	suggestComponent: ReferenceSuggestion | null;
+	suggestPopper: ReferenceSuggestionPopper | null;
 
 	async onload() {
 		this.tableEditor = new TableEditor(this.app);
@@ -39,38 +39,9 @@ export default class MyPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 
-			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			if (markdownView) {
-				this.suggestComponent = new ReferenceSuggestion(this.app, markdownView.contentEl);
-			}
+			this.suggestPopper = new ReferenceSuggestionPopper(this.app);
 
 			activeDocument.addEventListener('keydown', async (e) => {
-
-				// 如果补全插件处于触发状态，优先响应补全动作
-				if (this.suggestComponent && this.suggestComponent.isTriggered && this.editingCell) {
-					// 按上键选择上一个候选（没有选择候选，或者当前选择第一个候选，则选最最后一个候选）
-					if (e.key == 'ArrowUp') {
-						e.preventDefault();
-						e.stopPropagation();
-						this.suggestComponent.decSelectIndex();
-						return;
-					}
-					// 按下键选择下一个候选（没有选择候选，或者当前选择最后一个候选，则选择第一个候选）
-					if (e.key == 'ArrowDown') {
-						e.preventDefault();
-						e.stopPropagation();
-						this.suggestComponent.incSelectIndex();
-						return;
-					}
-					// 上屏
-					if (e.key == 'Enter') {
-						e.preventDefault();
-						e.stopPropagation();
-						const selected = this.suggestComponent.getSelected();
-						this.editingCell.cell.innerText = [this.editingCell.cell.innerText, '[[', selected, ']]'].join('');
-						return;
-					}
-				}
 
 				if (!this.editingCell)
 					return;
@@ -288,15 +259,9 @@ export default class MyPlugin extends Plugin {
 
 							// 将当前点击的 cell 设为正在编辑的 cell
 							this.editingCell = { tableId: this.hoverTableId, rowIndex: j, colIndex: k, cell };
-						}
-						cell.oninput = (e) => {
-							if (this.suggestComponent) {
-								const text = cell.innerText.slice(0, getCaretPosition(cell));
-								const matchResult = text.match(/\[\[([^\[\]]*)$/);
-								if (matchResult) {
-									this.suggestComponent.trigger(matchResult[1]);
-								} else this.suggestComponent.hide();
-							}
+
+							// 绑定补全
+							this.suggestPopper?.bindOuterEl(cell);
 						}
 					}
 				}

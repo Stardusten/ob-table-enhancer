@@ -26,3 +26,14 @@ export function setCaretPosition(editableElem: HTMLElement, newPos: number) {
 	}
 	return caretPos;
 }
+
+export function getCaretRect(container: HTMLElement) {
+	let caretPos = 0, sel, range;
+	sel = activeWindow.getSelection();
+	if (sel && sel.rangeCount) {
+		range = sel.getRangeAt(0);
+		const rect = range.getBoundingClientRect();
+		return rect;
+	}
+	return null;
+}
