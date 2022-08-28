@@ -29,24 +29,14 @@ export abstract class SuggestionPopper<T> {
 	protected fuzzySuggestions: FuzzySuggestion[];
 	/** 当前选中的候选下标 */
 	protected selectedIndex: number;
+	/** 补全是否触发 */
+	isTriggered: boolean;
 
 	constructor(app: App) {
 		this.app = app;
 		// 补全窗口直接插入到 <body</body>
 		this.containerEl = createDiv({ cls: 'ob-table-enhancer suggestion-container' });
 		this.suggestionEl = this.containerEl.createDiv({ cls: 'ob-table-enhancer suggestion' });
-	}
-
-	/**
-	 * 设置补全触发状态
-	 * @param isTriggered
-	 */
-	set isTriggered(isTriggered: boolean) {
-		 if (isTriggered) {
-			 activeDocument.body.appendChild(this.containerEl);
-		 } else {
-			 this.containerEl.detach();
-		 }
 	}
 
 	/** 如何从一个候选获得用于匹配的的 string */
@@ -61,6 +51,14 @@ export abstract class SuggestionPopper<T> {
 	abstract onUpdateCandidates(): void | Promise<void>;
 	/** 指定何时触发补全 */
 	abstract trigger(): void;
+
+	/**
+	 * 关闭补全
+	 */
+	disable() {
+		this.isTriggered = false;
+		this.containerEl.detach();
+	}
 
 	/**
 	 * 绑定要补全的 element
@@ -112,7 +110,11 @@ export abstract class SuggestionPopper<T> {
 		if (!this.candidates)
 			this.onUpdateCandidates();
 
+		// 设置触发状态
 		this.isTriggered = true;
+
+		// 显示补全窗口
+		activeDocument.body.appendChild(this.containerEl);
 
 		// 清空所有候选
 		this.suggestionEl.innerHTML = '';
@@ -226,8 +228,8 @@ export abstract class SuggestionPopper<T> {
 		this.outerEl.innerHTML = [afterApply, caret2end].join('');
 		// 移动光标
 		setCaretPosition(this.outerEl, afterApply.length);
-		// 补全完后隐藏
-		this.isTriggered = false;
+		// 补全完后关闭
+		this.disable();
 		return;
 	}
 }

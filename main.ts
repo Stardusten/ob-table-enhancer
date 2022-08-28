@@ -360,7 +360,7 @@ export default class MyPlugin extends Plugin {
 
 		// 关闭补全窗口
 		if (this.suggestPopper)
-			this.suggestPopper.isTriggered = false;
+			this.suggestPopper.disable();
 	}
 
 	// 计算表格索引 TODO 是否只取前 n 个 cells
