@@ -16,31 +16,37 @@ export interface FuzzySuggestion {
 
 export abstract class SuggestionPopper<T> {
 
-	app: App;
+	protected app: App;
 	/** 为哪个元素提供补全 */
-	outerEl: HTMLElement;
+	protected outerEl: HTMLElement;
 	// <suggestion-container>
 	//   <suggestion>
-	containerEl: HTMLElement;
-	suggestionEl: HTMLElement;
+	protected containerEl: HTMLElement;
+	protected suggestionEl: HTMLElement;
 	/** 所有候选 */
 	protected candidates: T[];
 	/** 所有补全建议 */
 	protected fuzzySuggestions: FuzzySuggestion[];
-	/** 补全是否被触发 */
-	isTriggered: boolean;
 	/** 当前选中的候选下标 */
-	selectedIndex: number;
+	protected selectedIndex: number;
 
 	constructor(app: App) {
 		this.app = app;
 		// 补全窗口直接插入到 <body</body>
-		this.containerEl = activeDocument.body.createDiv({ cls: 'ob-table-enhancer suggestion-container' });
+		this.containerEl = createDiv({ cls: 'ob-table-enhancer suggestion-container' });
 		this.suggestionEl = this.containerEl.createDiv({ cls: 'ob-table-enhancer suggestion' });
+	}
 
-		// 默认隐藏
-		this.containerEl.style.display = 'none';
-		this.isTriggered = false;
+	/**
+	 * 设置补全触发状态
+	 * @param isTriggered
+	 */
+	set isTriggered(isTriggered: boolean) {
+		 if (isTriggered) {
+			 activeDocument.body.appendChild(this.containerEl);
+		 } else {
+			 this.containerEl.detach();
+		 }
 	}
 
 	/** 如何从一个候选获得用于匹配的的 string */
@@ -49,10 +55,12 @@ export abstract class SuggestionPopper<T> {
 	abstract getDisplay(item: T, queryString: string, searchResult: SearchResult): string;
 	/** 如何从一个候选获得用于替换的 string */
 	abstract getReplaceString(item: T): string;
-	/** 更新候选 */
+	/** 指定何时更新候选（除了候选为空时会自动调用一次） */
 	abstract updateCandidates(): void | Promise<void>;
-	/** 注册相关事件 */
-	abstract registerEvents(): void;
+	/** 指定如何更新候选 */
+	abstract onUpdateCandidates(): void | Promise<void>;
+	/** 指定何时触发补全 */
+	abstract trigger(): void;
 
 	/**
 	 * 绑定要补全的 element
@@ -60,18 +68,50 @@ export abstract class SuggestionPopper<T> {
 	 */
 	bindOuterEl(outerEl: HTMLElement) {
 		this.outerEl = outerEl;
-		this.registerEvents();
+		this.trigger();
+
+		const oldKeydown = this.outerEl.onkeydown;
+		this.outerEl.onkeydown = (e) => {
+			// 如果补全插件处于触发状态，优先响应补全动作
+			if (this.isTriggered) {
+				// 按上键选择上一个候选（没有选择候选，或者当前选择第一个候选，则选最最后一个候选）
+				if (e.key == 'ArrowUp') {
+					e.preventDefault();
+					e.stopPropagation();
+					this.selectPrev();
+					return;
+				}
+				// 按下键选择下一个候选（没有选择候选，或者当前选择最后一个候选，则选择第一个候选）
+				if (e.key == 'ArrowDown') {
+					e.preventDefault();
+					e.stopPropagation();
+					this.selectNext();
+					return;
+				}
+				// 按下 enter 上屏
+				if (e.key == 'Enter') {
+					e.preventDefault();
+					e.stopPropagation();
+					this.applySuggestion();
+					return;
+				}
+			}
+			// 执行旧的回调
+			if (oldKeydown) { // @ts-ignore
+				oldKeydown(e);
+			}
+		}
 	}
 
 	/**
 	 * 触发补全
 	 */
-	onTrigger = (queryPattern: string) => {
+	protected onTrigger = (queryPattern: string) => {
 
+		// 若没有候选，则调用一次更新候选
 		if (!this.candidates)
-			this.updateCandidates();
+			this.onUpdateCandidates();
 
-		// 设置触发状态
 		this.isTriggered = true;
 
 		// 清空所有候选
@@ -105,9 +145,15 @@ export abstract class SuggestionPopper<T> {
 		this.containerEl.style.display = 'block'; // TODO detach() better?
 
 		// 添加所有补全建议到补全窗口
-		for (const suggestion of this.fuzzySuggestions) {
-			this.suggestionEl.createDiv({ cls: 'suggestion-item mod-complex'} ,(div) => div.innerHTML = suggestion.display);
-		}
+		this.fuzzySuggestions.map((suggestion, i) => {
+			this.suggestionEl.createDiv({ cls: 'suggestion-item mod-complex'} ,(div) => {
+				div.innerHTML = suggestion.display;
+				// hover 哪个选项，认为选择哪个
+				div.onmouseover = (e) => this.select(i);
+				// 点击哪个选项，应用哪个
+				div.onclick = (e) => this.applySuggestion();
+			});
+		});
 
 		// 默认不选中
 		this.selectedIndex = -1;
@@ -151,6 +197,21 @@ export abstract class SuggestionPopper<T> {
 	}
 
 	/**
+	 * 选中指定下标的补全建议
+	 * @param selectIndex
+	 */
+	protected select = (selectIndex: number) => {
+		// 移除原有选中样式
+		this.suggestionEl.children[this.selectedIndex]?.classList.remove('is-selected');
+		this.selectedIndex = selectIndex;
+		// 添加新的选中样式
+		const selectedElem = this.suggestionEl.children[this.selectedIndex];
+		selectedElem.classList.add('is-selected');
+		// 选中元素保持在可见范围
+		selectedElem.scrollIntoView(false);
+	}
+
+	/**
 	 * 应用当前选中的补全建议
 	 */
 	protected applySuggestion = () => {
@@ -166,7 +227,6 @@ export abstract class SuggestionPopper<T> {
 		// 移动光标
 		setCaretPosition(this.outerEl, afterApply.length);
 		// 补全完后隐藏
-		this.containerEl.style.display = 'none';
 		this.isTriggered = false;
 		return;
 	}
@@ -215,7 +275,8 @@ export class ReferenceSuggestionPopper extends SuggestionPopper<TFile> {
 		return this.app.fileManager.generateMarkdownLink(item, activeFile.path);
 	}
 
-	registerEvents(): void {
+	trigger(): void {
+		// 输入时，光标前为 [[ 则触发补全
 		const oldInput = this.outerEl.oninput;
 		this.outerEl.oninput = (e) => {
 			const caretPosition = getCaretPosition(this.outerEl);
@@ -233,51 +294,15 @@ export class ReferenceSuggestionPopper extends SuggestionPopper<TFile> {
 				oldInput(e);
 			}
 		};
-		const oldKeydown = this.outerEl.onkeydown;
-		this.outerEl.onkeydown = (e) => {
-			// 如果补全插件处于触发状态，优先响应补全动作
-			if (this.isTriggered) {
-				// 按上键选择上一个候选（没有选择候选，或者当前选择第一个候选，则选最最后一个候选）
-				if (e.key == 'ArrowUp') {
-					e.preventDefault();
-					e.stopPropagation();
-					this.selectPrev();
-					return;
-				}
-				// 按下键选择下一个候选（没有选择候选，或者当前选择最后一个候选，则选择第一个候选）
-				if (e.key == 'ArrowDown') {
-					e.preventDefault();
-					e.stopPropagation();
-					this.selectNext();
-					return;
-				}
-				// 上屏
-				if (e.key == 'Enter') {
-					e.preventDefault();
-					e.stopPropagation();
-					this.applySuggestion();
-					return;
-				}
-			}
-			// 执行旧的回调
-			if (oldKeydown)
-				{ // @ts-ignore
-					oldKeydown(e);
-				}
-		}
-		const oldBlur = this.outerEl.onblur;
-		this.outerEl.on = (e) => {
-			// 失焦时隐藏
-			this.containerEl.style.display = 'hide';
-			this.isTriggered = false;
-			if (oldBlur) { // @ts-ignore
-				oldBlur(e);
-			}
-		}
-		this.app.metadataCache.on('resolved', () => this.updateCandidates);
 	}
 
 	updateCandidates(): void | Promise<void> {
+		this.app.metadataCache.on('resolved', () => {
+			this.onUpdateCandidates();
+		});
+	}
+
+	onUpdateCandidates(): void | Promise<void> {
 		this.candidates = this.app.vault.getMarkdownFiles();
 	}
 }

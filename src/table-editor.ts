@@ -319,7 +319,7 @@ export class TableEditor {
 				result.push(str.trim());
 		}
 		const resultStr = result.join('');
-		console.log(resultStr);
+		// console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 

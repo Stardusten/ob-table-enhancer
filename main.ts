@@ -357,6 +357,10 @@ export default class MyPlugin extends Plugin {
 
 		// 清空
 		this.editingCell = null;
+
+		// 关闭补全窗口
+		if (this.suggestPopper)
+			this.suggestPopper.isTriggered = false;
 	}
 
 	// 计算表格索引 TODO 是否只取前 n 个 cells
@@ -381,7 +385,7 @@ export default class MyPlugin extends Plugin {
 		}
 		// 筛去 md 标记符号
 		const resultStr = result.join('');
-		console.log(resultStr);
+		// console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 
