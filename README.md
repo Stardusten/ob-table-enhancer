@@ -43,3 +43,7 @@
 9. 当前列右侧插入新列
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252102032.gif)
+
+10. 单元格内支持引用补全，补全使用官方模糊匹配函数，支持高亮匹配子串
+
+	![ob-plugin](https://user-images.githubusercontent.com/38722307/187054193-bb0e837c-8817-4cf3-9f49-cd231c1d8b71.gif)
