@@ -30,7 +30,7 @@ export class TableEditor {
 		// 跳过 yaml
 		if (this.rows[0].startsWith('---')) {
 			while (++i < len) {
-				if (this.rows[0].startsWith('---'))
+				if (this.rows[i].startsWith('---'))
 					break;
 			}
 		}
@@ -42,7 +42,7 @@ export class TableEditor {
 			// 跳过代码块
 			if (row.startsWith('```')) {
 				while (++i < len) {
-					if (this.rows[0].startsWith('```'))
+					if (this.rows[i].startsWith('```'))
 						break;
 				}
 			}
