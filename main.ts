@@ -6,6 +6,7 @@ import {getRowNum, isSameCell} from "./src/table-utils";
 import {text} from "stream/consumers";
 import {hashCode} from "./src/editor-utils";
 import {ReferenceSuggestionPopper} from "./src/reference-suggest";
+import {ToolBar} from "./src/tool-bar";
 
 // Remember to rename these classes and interfaces!
 
@@ -189,6 +190,9 @@ export default class MyPlugin extends Plugin {
 		this.registerMarkdownPostProcessor((element, context) => {
 			const tables = element.querySelectorAll('table');
 			tables.forEach((table) => {
+				// 忽略 dataview 的表格
+				if (table.classList.contains('dataview'))
+					return;
 				const tableId = this.getIdentifier(table);
 				// console.log(tableId);
 				// 监听当前 hover 的 table
@@ -196,6 +200,7 @@ export default class MyPlugin extends Plugin {
 				// 点击表格不再转换为源码编辑模式
 				// 仍可以从左上角按钮转换到源码编辑模式
 				table.onclick = (e) => e.preventDefault();
+
 				// 为表格 cell 添加行索引、列索引属性
 				for (let j = 0; j < table.rows.length; j++) {
 					const row = table.rows[j];
@@ -387,15 +392,5 @@ export default class MyPlugin extends Plugin {
 		const resultStr = result.join('');
 		// console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
-	}
-
-	async forcePostProcessorReload() {
-		this.app.workspace.iterateAllLeaves((leaf) => {
-			const view = leaf.view;
-			if (view.getViewType() === "markdown") {
-				if (view instanceof MarkdownView)
-					view.previewMode.rerender(true);
-			}
-		});
 	}
 }

@@ -28,8 +28,17 @@ export class TableEditor {
 		let existNonStandardTable = false;
 		for (let i = 0; i < len; i++) {
 			const row = this.rows[i];
+			// 不考虑分隔符
 			if (row.startsWith('---'))
 				continue;
+			// 跳过代码块
+			if (row.startsWith('```')) {
+				while (++i < len) {
+					const row = this.rows[i];
+					if (row.startsWith('```'))
+						break;
+				}
+			}
 			// 找到一个表格
 			const matchResult = row.match(formatRowRegex);
 			if (matchResult) {

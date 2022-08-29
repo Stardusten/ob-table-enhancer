@@ -1,6 +1,5 @@
 import {App, MarkdownView, prepareFuzzySearch, SearchMatches, SearchResult, TFile} from "obsidian";
 import {getCaretPosition, getCaretRect, setCaretPosition} from "./html-utils";
-import {deleteLines} from "./editor-utils";
 
 export interface FuzzySuggestion {
 	/** 补全窗口里显示的内容 */
@@ -264,6 +263,7 @@ export class ReferenceSuggestionPopper extends SuggestionPopper<TFile> {
 			result.push(item.parent.path);
 			result.push('</div>');
 		}
+		result.push('<i class="fas fa-align-left"></i>');
 		result.push('</div>');
 		return result.join('');
 	}
