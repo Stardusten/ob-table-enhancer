@@ -26,7 +26,15 @@ export class TableEditor {
 		const formatRowRegex = /^\s*(\|?)(?:[:\-\s|\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]+)+$/;
 		const len = this.rows.length;
 		let existNonStandardTable = false;
-		for (let i = 0; i < len; i++) {
+		let i = 0;
+		// 跳过 yaml
+		if (this.rows[0].startsWith('---')) {
+			while (++i < len) {
+				if (this.rows[0].startsWith('---'))
+					break;
+			}
+		}
+		while (++i < len) {
 			const row = this.rows[i];
 			// 不考虑分隔符
 			if (row.startsWith('---'))
@@ -34,8 +42,7 @@ export class TableEditor {
 			// 跳过代码块
 			if (row.startsWith('```')) {
 				while (++i < len) {
-					const row = this.rows[i];
-					if (row.startsWith('```'))
+					if (this.rows[0].startsWith('```'))
 						break;
 				}
 			}
