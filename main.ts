@@ -32,21 +32,25 @@ export default class MyPlugin extends Plugin {
 	hoverCell: Cell | null;
 	/** 提供双链补全的组件 */
 	suggestPopper: ReferenceSuggestionPopper | null;
+	/** 提供悬浮工具栏的组件 */
+	toolBar: ToolBar | null;
 
 	async onload() {
 		this.tableEditor = new TableEditor(this.app);
 
 		this.editingCell = null;
+		this.hoverCell = null;
 
 		this.app.workspace.onLayoutReady(() => {
 
 			this.suggestPopper = new ReferenceSuggestionPopper(this.app);
+			this.toolBar = new ToolBar(this.tableEditor);
 
 			activeDocument.addEventListener('keydown', async (e) => {
 
 				if (!this.editingCell)
 					return;
-				const cell = this.editingCell.cell;
+				const cell = this.editingCell.cellEl;
 
 				// <shift-enter> 单元格内换行，md 语法应该是插入一个 <br> 标签
 				if (!e.repeat && e.key == 'Enter' && e.shiftKey && this.editingCell) {
@@ -196,7 +200,10 @@ export default class MyPlugin extends Plugin {
 				const tableId = this.getIdentifier(table);
 				// console.log(tableId);
 				// 监听当前 hover 的 table
-				table.onmouseenter = (e) => this.hoverTableId = tableId;
+				table.onmouseenter = (e) => {
+					this.hoverTableId = tableId;
+					// 为
+				}
 				// 点击表格不再转换为源码编辑模式
 				// 仍可以从左上角按钮转换到源码编辑模式
 				table.onclick = (e) => e.preventDefault();
@@ -205,19 +212,25 @@ export default class MyPlugin extends Plugin {
 				for (let j = 0; j < table.rows.length; j++) {
 					const row = table.rows[j];
 					for (let k = 0; k < row.cells.length; k++) {
-						const cell = row.cells[k];
+						const cellEl = row.cells[k];
 						// 设置 id
-						cell.setAttr('id', `${tableId}${j}${k}`);
+						cellEl.setAttr('id', `${tableId}${j}${k}`);
 						// 监听当前 hover 的 cell
-						cell.onmouseenter = (e) => this.hoverCell = {
-							tableId,
-							rowIndex: j,
-							colIndex: k,
-							cell
-						};
-						cell.onmouseout = (e) => this.hoverCell = null;
+						cellEl.onmouseenter = (e) => {
+							this.hoverCell = {
+								tableId,
+								rowIndex: j,
+								colIndex: k,
+								cellEl
+							};
+							this.toolBar?.tryShowFor(this.hoverCell);
+						}
+						cellEl.onmouseout = (e) => {
+							this.hoverCell = null;
+							this.toolBar?.tryHide(200);
+						}
 						// 为每个 cell 注册点击事件
-						cell.onclick = async (e) => {
+						cellEl.onclick = async (e) => {
 							e.preventDefault();
 							e.stopPropagation();
 
@@ -226,7 +239,7 @@ export default class MyPlugin extends Plugin {
 								return;
 
 							// 已经处于编辑模式，防止再次触发
-							if (cell.getAttr('contenteditable') == 'true' || !this.hoverTableId)
+							if (cellEl.getAttr('contenteditable') == 'true' || !this.hoverTableId)
 								return;
 
 							// 如果之前正在编辑 cell，则取消之
@@ -246,27 +259,27 @@ export default class MyPlugin extends Plugin {
 
 							// 将 cell 内替换为 md 源码
 							const text = this.tableEditor.getCell(this.hoverTableId!, j, k);
-							cell.innerText = text;
+							cellEl.innerText = text;
 
 							// 使这个 cell 可编辑
-							cell.setAttr('contenteditable', true);
+							cellEl.setAttr('contenteditable', true);
 
 							// 聚焦
-							cell.focus();
+							cellEl.focus();
 
 							// 光标移动到最右侧
 							if (text != '')
-								setCaretPosition(cell, text.length);
+								setCaretPosition(cellEl, text.length);
 
 							// 高亮显示正在编辑的 cell
-							cell.style.backgroundColor = 'var(--bg1)';
-							cell.style.filter = 'brightness(1.5)';
+							cellEl.style.backgroundColor = 'var(--bg1)';
+							cellEl.style.filter = 'brightness(1.5)';
 
 							// 将当前点击的 cell 设为正在编辑的 cell
-							this.editingCell = { tableId: this.hoverTableId, rowIndex: j, colIndex: k, cell };
+							this.editingCell = { tableId: this.hoverTableId, rowIndex: j, colIndex: k, cellEl: cellEl };
 
 							// 绑定补全
-							this.suggestPopper?.bindOuterEl(cell);
+							this.suggestPopper?.bindOuterEl(cellEl);
 						}
 					}
 				}
@@ -314,10 +327,6 @@ export default class MyPlugin extends Plugin {
 			}).addItem((item) => {
 				item.setTitle('Insert row below');
 				item.onClick(async () => {
-					if (hoverCellRowIndex == 0) {
-						new Notice('You can\'t add new row under header of table.');
-						return;
-					}
 					// 先 parse
 					await this.tableEditor.parseActiveFile();
 					await this.tableEditor.insertRowBelow(hoverTableId, hoverCellRowIndex);
@@ -341,7 +350,7 @@ export default class MyPlugin extends Plugin {
 	 */
 	async doneEdit(cell: Cell) {
 
-		const { rowIndex, colIndex, cell: cellElem } = cell;
+		const { rowIndex, colIndex, cellEl: cellElem } = cell;
 		if (!this.hoverTableId)
 			return;
 

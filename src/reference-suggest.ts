@@ -94,9 +94,7 @@ export abstract class SuggestionPopper<T> {
 				}
 			}
 			// 执行旧的回调
-			if (oldKeydown) { // @ts-ignore
-				oldKeydown(e);
-			}
+			oldKeydown?.call(this, e);
 		}
 	}
 
@@ -291,10 +289,7 @@ export class ReferenceSuggestionPopper extends SuggestionPopper<TFile> {
 				this.containerEl.style.display = 'none';
 			}
 			// 执行旧的回调
-			if (oldInput)
-			{ // @ts-ignore
-				oldInput(e);
-			}
+			oldInput?.call(this, e);
 		};
 	}
 

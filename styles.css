@@ -6,6 +6,29 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
-.ob-table-enhancer-toolbar {
+.ob-table-enhancer-row-bar {
+	display: flex;
 	position: absolute;
+	width: fit-content;
+}
+
+.ob-table-enhancer-col-bar {
+	display: flex;
+	position: absolute;
+	height: fit-content;
+}
+
+.ob-table-enhancer-row-bar-button {
+	display: flex;
+	width: fit-content;
+	height: fit-content;
+	padding: 0 2px;
+}
+
+.ob-table-enhancer-col-bar-button {
+	display: flex;
+	width: fit-content;
+	height: fit-content;
+	padding: 5px 2px 0 0;
+	margin: 0;
 }

@@ -21,5 +21,5 @@ export interface Cell {
 	tableId: string,
 	rowIndex: number,
 	colIndex: number,
-	cell: HTMLTableCellElement,
+	cellEl: HTMLTableCellElement,
 }

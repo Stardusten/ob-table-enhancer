@@ -36,6 +36,9 @@ export class TableEditor {
 		}
 		while (++i < len) {
 			const row = this.rows[i];
+			// 跳过空行
+			if (row.trim() == '')
+				continue;
 			// 不考虑分隔符
 			if (row.startsWith('---'))
 				continue;
@@ -154,7 +157,7 @@ export class TableEditor {
 
 	/**
 	 * 获得给定 table 第 i 行的行号（在 this.rows 中的索引）
-	 * @param tableId must valid
+	 * @param table must valid
 	 * @param rowIndex
 	 * @private
 	 */
@@ -274,10 +277,6 @@ export class TableEditor {
 	async insertRowBelow(tableId: string, rowIndex: number) {
 		const table = this.tables.get(tableId);
 		if (!table) return;
-		if (rowIndex == 0) {
-			// TODO 不能在表头下方插入新行
-			return;
-		}
 		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (markdownView instanceof MarkdownView) {
 			// 使用 editor transaction 更新，性能更好
@@ -288,9 +287,30 @@ export class TableEditor {
 				row.push('  ');
 			}
 			const rowText = TableEditor.rowCells2rowString(row);
-			const rowLineNumber = this.getLineNumber(table, rowIndex);
+			const rowLineNumber = table.fromRowIndex + rowIndex + 1;
 			insertLineBelow(editor, rowLineNumber);
 			editor.setLine(rowLineNumber + 1, rowText);
+			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
+		}
+	}
+
+	/**
+	 * 设置一列为居中 / 居左 / 居右对齐
+	 */
+	async setColAligned(tableId: string, colIndex: number, aligned: 'left' | 'center' | 'right') {
+		const table = this.tables.get(tableId);
+		if (!table) return;
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView) {
+			// 使用 editor transaction 更新，性能更好
+			const editor = markdownView.editor;
+			table.formatRow[colIndex] = aligned == 'left'
+				? ':----'
+				: aligned == 'right'
+				? '----:'
+				: ':---:';
+			// console.log(table.formatRow);
+			editor.setLine(table.fromRowIndex + 1, TableEditor.rowCells2rowString(table.formatRow));
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}
