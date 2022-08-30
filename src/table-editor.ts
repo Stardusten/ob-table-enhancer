@@ -13,6 +13,9 @@ export class TableEditor {
 		this.app = app;
 	}
 
+	/**
+	 * 解析当前激活文件中的所有表格
+	 */
 	async parseActiveFile() {
 		this.activeFile = this.app.workspace.getActiveFile();
 		if (!this.activeFile)
@@ -354,8 +357,12 @@ export class TableEditor {
 			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/))
 				result.push(str.trim());
 		}
+		// 添加行列数
+		result.push(table.cells.length.toString());
+		result.push(table.cells[0].length.toString());
 		const resultStr = result.join('');
-		// console.log(resultStr);
+		if (resultStr.length == 0)
+			return '空表';
 		return String.fromCharCode(hashCode(resultStr));
 	}
 

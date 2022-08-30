@@ -151,9 +151,20 @@ export default class MyPlugin extends Plugin {
 					e.stopPropagation();
 					const { tableId, rowIndex, colIndex } = this.editingCell;
 					await this.doneEdit(this.editingCell);
-					const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
-					if (cellLeft instanceof HTMLTableCellElement) {
-						cellLeft.click();
+					const table = this.tableEditor.tables.get(tableId);
+					if (table) {
+						const rowNum = table.cells.length;
+						const colNum = table.cells[0].length;
+						let nextCell;
+						if (rowIndex == 0 && colIndex == 0) {
+							nextCell = activeDocument.querySelector(`#${tableId}${rowNum - 1}${colNum - 1}`);
+						} else if (colIndex == 0) {
+							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex - 1}${colNum - 1}`);
+						} else {
+							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
+						}
+						if (nextCell instanceof HTMLTableCellElement)
+							nextCell.click();
 					}
 					return;
 				}
@@ -165,9 +176,20 @@ export default class MyPlugin extends Plugin {
 					e.stopPropagation();
 					const { tableId, rowIndex, colIndex } = this.editingCell;
 					await this.doneEdit(this.editingCell);
-					const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
-					if (cellRight instanceof HTMLTableCellElement) {
-						cellRight.click();
+					const table = this.tableEditor.tables.get(tableId);
+					if (table) {
+						const rowNum = table.cells.length;
+						const colNum = table.cells[0].length;
+						let nextCell;
+						if (rowIndex == rowNum - 1 && colIndex == colNum - 1) {
+							nextCell = activeDocument.querySelector(`#${tableId}00`);
+						} else if (colIndex == colIndex - 1) {
+							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex + 1}0`);
+						} else {
+							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
+						}
+						if (nextCell instanceof HTMLTableCellElement)
+							nextCell.click();
 					}
 					return;
 				}
@@ -271,9 +293,8 @@ export default class MyPlugin extends Plugin {
 							if (text != '')
 								setCaretPosition(cellEl, text.length);
 
-							// 高亮显示正在编辑的 cell
-							cellEl.style.backgroundColor = 'var(--bg1)';
-							cellEl.style.filter = 'brightness(1.5)';
+							// 为正在编辑的 cell 添加 class
+							cellEl.classList.add('is-editing');
 
 							// 将当前点击的 cell 设为正在编辑的 cell
 							this.editingCell = { tableId: this.hoverTableId, rowIndex: j, colIndex: k, cellEl: cellEl };
@@ -366,8 +387,7 @@ export default class MyPlugin extends Plugin {
 		);
 
 		// 取消高亮
-		cellElem.style.backgroundColor = 'initial';
-		cellElem.style.filter = 'none';
+		cellElem.classList.remove('is-editing');
 
 		// 清空
 		this.editingCell = null;
@@ -397,9 +417,14 @@ export default class MyPlugin extends Plugin {
 			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/))
 				result.push(str.trim());
 		}
+		// 添加行列数
+		result.push(table.rows.length.toString());
+		result.push(table.rows[0].cells.length.toString());
 		// 筛去 md 标记符号
 		const resultStr = result.join('');
 		// console.log(resultStr);
+		if (resultStr.length == 0)
+			return '空表';
 		return String.fromCharCode(hashCode(resultStr));
 	}
 }

@@ -1,7 +1,7 @@
 {
 	"id": "ob-table-enhancer",
 	"name": "Table Enhancer",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"minAppVersion": "0.15.0",
 	"description": "一个表格插件",
 	"author": "stardust",
