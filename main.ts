@@ -4,7 +4,7 @@ import {Cell} from "./src/table";
 import {getCaretPosition, setCaretPosition} from "./src/html-utils";
 import {getRowNum, isSameCell} from "./src/table-utils";
 import {text} from "stream/consumers";
-import {hashCode} from "./src/editor-utils";
+import {hashCode, inReadingView} from "./src/editor-utils";
 import {ReferenceSuggestionPopper} from "./src/reference-suggest";
 import {ToolBar} from "./src/tool-bar";
 
@@ -183,7 +183,7 @@ export default class MyPlugin extends Plugin {
 						let nextCell;
 						if (rowIndex == rowNum - 1 && colIndex == colNum - 1) {
 							nextCell = activeDocument.querySelector(`#${tableId}00`);
-						} else if (colIndex == colIndex - 1) {
+						} else if (colIndex == colNum - 1) {
 							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex + 1}0`);
 						} else {
 							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
@@ -256,8 +256,8 @@ export default class MyPlugin extends Plugin {
 							e.preventDefault();
 							e.stopPropagation();
 
-							// 按下了 ctrl，则不触发编辑
-							if (this.ctrl)
+							// 按下了 ctrl，或处于 reading 模式，则不触发编辑
+							if (this.ctrl || inReadingView())
 								return;
 
 							// 已经处于编辑模式，防止再次触发
