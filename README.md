@@ -47,3 +47,7 @@
 10. 单元格内支持引用补全，补全使用官方模糊匹配函数，支持高亮匹配子串
 
 	![ob-plugin](https://user-images.githubusercontent.com/38722307/187054193-bb0e837c-8817-4cf3-9f49-cd231c1d8b71.gif)
+
+11. 鼠标悬浮到行首 / 列首单元格时，会显示一个悬浮工具栏，提供插入 / 删除行 / 列，调整对齐功能
+
+![ob-plugin](https://user-images.githubusercontent.com/38722307/187380007-c76e72b4-31b2-4b89-a7e5-3a8bb5338e78.gif)
