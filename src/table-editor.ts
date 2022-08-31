@@ -1,6 +1,13 @@
 import {Table} from "./table";
 import {App, MarkdownView, Notice, TFile} from "obsidian";
-import {deleteLine, deleteLines, hashCode, insertLineBelow, insertLineBelowWithText} from "./editor-utils";
+import {
+	deleteLine,
+	deleteLines,
+	hashCode,
+	insertLineBelow,
+	insertLineBelowWithText,
+	setLineWithoutScroll
+} from "./editor-utils";
 
 export class TableEditor {
 
@@ -187,8 +194,8 @@ export class TableEditor {
 			const newLine = TableEditor.rowCells2rowString(table.cells[rowIndex]);
 			// 防止没有对文本做修改，导致不触发重新渲染
 			if (editor.getLine(rowLineNumber).length == newLine.length)
-				editor.setLine(rowLineNumber, newLine + ' ');
-			editor.setLine(rowLineNumber, newLine);
+				setLineWithoutScroll(editor, rowLineNumber, newLine + ' ');
+			setLineWithoutScroll(editor, rowLineNumber, newLine);
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}
@@ -237,10 +244,10 @@ export class TableEditor {
 			if (table.formatRow.length == 1) {
 				deleteLines(editor, table.fromRowIndex, table.toRowIndex);
 			} else {
-				editor.setLine(table.fromRowIndex + 1, TableEditor.rowCells2rowString(table.formatRow));
+				setLineWithoutScroll(editor, table.fromRowIndex + 1, TableEditor.rowCells2rowString(table.formatRow));
 				for (let i = 0; i < table.cells.length; i++) {
 					const lineNumber = this.getLineNumber(table, i);
-					editor.setLine(lineNumber, TableEditor.rowCells2rowString(table.cells[i]));
+					setLineWithoutScroll(editor, lineNumber, TableEditor.rowCells2rowString(table.cells[i]));
 				}
 			}
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
@@ -263,10 +270,10 @@ export class TableEditor {
 		if (markdownView instanceof MarkdownView) {
 			// 使用 editor transaction 更新，性能更好
 			const editor = markdownView.editor;
-			editor.setLine(table.fromRowIndex + 1, TableEditor.rowCells2rowString(table.formatRow));
+			setLineWithoutScroll(editor, table.fromRowIndex + 1, TableEditor.rowCells2rowString(table.formatRow));
 			for (let i = 0; i < table.cells.length; i++) {
 				const lineNumber = this.getLineNumber(table, i);
-				editor.setLine(lineNumber, TableEditor.rowCells2rowString(table.cells[i]));
+				setLineWithoutScroll(editor, lineNumber, TableEditor.rowCells2rowString(table.cells[i]));
 			}
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
@@ -292,7 +299,7 @@ export class TableEditor {
 			const rowText = TableEditor.rowCells2rowString(row);
 			const rowLineNumber = table.fromRowIndex + rowIndex + 1;
 			insertLineBelow(editor, rowLineNumber);
-			editor.setLine(rowLineNumber + 1, rowText);
+			setLineWithoutScroll(editor, rowLineNumber + 1, rowText);
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}
@@ -313,7 +320,7 @@ export class TableEditor {
 				? '----:'
 				: ':---:';
 			// console.log(table.formatRow);
-			editor.setLine(table.fromRowIndex + 1, TableEditor.rowCells2rowString(table.formatRow));
+			setLineWithoutScroll(editor, table.fromRowIndex + 1, TableEditor.rowCells2rowString(table.formatRow));
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}

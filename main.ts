@@ -1,4 +1,4 @@
-import {MarkdownView, Notice, Plugin} from 'obsidian';
+import {MarkdownEditView, MarkdownView, Notice, Plugin} from 'obsidian';
 import {TableEditor} from "./src/table-editor";
 import {Cell} from "./src/table";
 import {getCaretPosition, setCaretPosition} from "./src/html-utils";
@@ -45,6 +45,18 @@ export default class MyPlugin extends Plugin {
 
 			this.suggestPopper = new ReferenceSuggestionPopper(this.app);
 			this.toolBar = new ToolBar(this.tableEditor);
+
+			// 劫持滚动事件
+			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			const stopDefaultScrollFunc = (e: Event) => {
+				// 如果当前正在编辑表格，则屏蔽默认滚动事件
+				if (this.hoverTableId)
+					e.stopImmediatePropagation();
+			}
+			if (markdownView instanceof MarkdownView) {
+				const cm = (markdownView.editor as any).cm;
+				cm.scrollDOM.addEventListener('scroll', stopDefaultScrollFunc, true);
+			}
 
 			activeDocument.addEventListener('keydown', async (e) => {
 

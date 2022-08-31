@@ -55,8 +55,10 @@ export abstract class SuggestionPopper<T> {
 	 * 关闭补全
 	 */
 	disable() {
+		if (this.isTriggered) {
 		this.isTriggered = false;
 		this.containerEl.detach();
+		}
 	}
 
 	/**
