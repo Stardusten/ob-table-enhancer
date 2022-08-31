@@ -8,6 +8,7 @@ import {
 	insertLineBelowWithText,
 	setLineWithoutScroll
 } from "./editor-utils";
+import MyPlugin from "../main";
 
 export class TableEditor {
 
@@ -16,8 +17,8 @@ export class TableEditor {
 	tables: Map<string, Table>;
 	rows: string[];
 
-	constructor(app: App) {
-		this.app = app;
+	constructor(plugin: MyPlugin) {
+		this.app = plugin.app;
 	}
 
 	/**

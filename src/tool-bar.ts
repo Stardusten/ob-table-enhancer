@@ -1,6 +1,7 @@
-import {App, Notice} from "obsidian";
+import {App, debounce, Notice} from "obsidian";
 import {TableEditor} from "./table-editor";
 import {Cell} from "./table";
+import MyPlugin from "../main";
 
 const insertBelowIcon = `
 <svg
@@ -130,8 +131,8 @@ export class ToolBar {
 	/** 哪个 cell 触发的 toolbar */
 	fromCell: Cell;
 
-	constructor(tableEditor: TableEditor) {
-		this.tableEditor = tableEditor;
+	constructor(plugin: MyPlugin) {
+		this.tableEditor = plugin.tableEditor;
 		this.activeOpBars = [];
 
 		this.rowOpBarEl = createDiv({
@@ -147,7 +148,7 @@ export class ToolBar {
 			el.onclick = async () => {
 				// 先 parse
 				await this.tableEditor.parseActiveFile();
-				await tableEditor.insertRowBelow(this.fromCell.tableId, this.fromCell.rowIndex);
+				await this.tableEditor.insertRowBelow(this.fromCell.tableId, this.fromCell.rowIndex);
 			}
 		});
 		this.colOpBarEl.createDiv({
@@ -157,7 +158,7 @@ export class ToolBar {
 			el.onclick = async () => {
 				// 先 parse
 				await this.tableEditor.parseActiveFile();
-				await tableEditor.insertColRight(this.fromCell.tableId, this.fromCell.colIndex);
+				await this.tableEditor.insertColRight(this.fromCell.tableId, this.fromCell.colIndex);
 			}
 		});
 		this.rowOpBarEl.createDiv({
@@ -214,6 +215,13 @@ export class ToolBar {
 				await this.tableEditor.setColAligned(this.fromCell.tableId, this.fromCell.colIndex, 'right');
 			}
 		});
+
+		// 滚动时不显示
+		plugin.registerDomEvent(activeDocument, 'scroll', (e) => {
+			this.colOpBarEl.detach();
+			this.rowOpBarEl.detach();
+			this.activeOpBars = [];
+		}, true);
 	}
 
 	/**
@@ -262,6 +270,7 @@ export class ToolBar {
 		this.hideTimeout = setTimeout(() => {
 			this.colOpBarEl.detach();
 			this.rowOpBarEl.detach();
+			this.activeOpBars = [];
 		}, timeout);
 		const stopHideTimeout = (e: any) => {
 			clearTimeout(this.hideTimeout);

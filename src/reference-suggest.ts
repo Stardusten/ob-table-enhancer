@@ -1,5 +1,6 @@
 import {App, MarkdownView, prepareFuzzySearch, SearchMatches, SearchResult, TFile} from "obsidian";
 import {getCaretPosition, getCaretRect, setCaretPosition} from "./html-utils";
+import MyPlugin from "../main";
 
 export interface FuzzySuggestion {
 	/** 补全窗口里显示的内容 */
@@ -16,6 +17,7 @@ export interface FuzzySuggestion {
 export abstract class SuggestionPopper<T> {
 
 	protected app: App;
+	protected plugin: MyPlugin;
 	/** 为哪个元素提供补全 */
 	protected outerEl: HTMLElement;
 	// <suggestion-container>
@@ -31,8 +33,9 @@ export abstract class SuggestionPopper<T> {
 	/** 补全是否触发 */
 	isTriggered: boolean;
 
-	constructor(app: App) {
-		this.app = app;
+	constructor(plugin: MyPlugin) {
+		this.plugin = plugin;
+		this.app = plugin.app;
 		// 补全窗口直接插入到 <body</body>
 		this.containerEl = createDiv({ cls: 'ob-table-enhancer suggestion-container' });
 		this.suggestionEl = this.containerEl.createDiv({ cls: 'ob-table-enhancer suggestion' });
@@ -56,8 +59,8 @@ export abstract class SuggestionPopper<T> {
 	 */
 	disable() {
 		if (this.isTriggered) {
-		this.isTriggered = false;
-		this.containerEl.detach();
+			this.isTriggered = false;
+			this.containerEl.detach();
 		}
 	}
 
@@ -69,8 +72,7 @@ export abstract class SuggestionPopper<T> {
 		this.outerEl = outerEl;
 		this.trigger();
 
-		const oldKeydown = this.outerEl.onkeydown;
-		this.outerEl.onkeydown = (e) => {
+		this.plugin.registerDomEvent(this.outerEl, 'keydown', (e) => {
 			// 如果补全插件处于触发状态，优先响应补全动作
 			if (this.isTriggered) {
 				// 按上键选择上一个候选（没有选择候选，或者当前选择第一个候选，则选最最后一个候选）
@@ -95,9 +97,7 @@ export abstract class SuggestionPopper<T> {
 					return;
 				}
 			}
-			// 执行旧的回调
-			oldKeydown?.call(this, e);
-		}
+		});
 	}
 
 	/**
@@ -279,8 +279,7 @@ export class ReferenceSuggestionPopper extends SuggestionPopper<TFile> {
 
 	trigger(): void {
 		// 输入时，光标前为 [[ 则触发补全
-		const oldInput = this.outerEl.oninput;
-		this.outerEl.oninput = (e) => {
+		this.plugin.registerDomEvent(this.outerEl, 'input', (e) => {
 			const caretPosition = getCaretPosition(this.outerEl);
 			const text = this.outerEl.innerText.slice(0, caretPosition);
 			const matchResult = text.match(/\[\[([^\[\]]*)$/);
@@ -290,9 +289,7 @@ export class ReferenceSuggestionPopper extends SuggestionPopper<TFile> {
 				// 不符合触发规则
 				this.containerEl.style.display = 'none';
 			}
-			// 执行旧的回调
-			oldInput?.call(this, e);
-		};
+		});
 	}
 
 	updateCandidates(): void | Promise<void> {

@@ -36,29 +36,28 @@ export default class MyPlugin extends Plugin {
 	toolBar: ToolBar | null;
 
 	async onload() {
-		this.tableEditor = new TableEditor(this.app);
+		this.tableEditor = new TableEditor(this);
 
 		this.editingCell = null;
 		this.hoverCell = null;
 
 		this.app.workspace.onLayoutReady(() => {
 
-			this.suggestPopper = new ReferenceSuggestionPopper(this.app);
-			this.toolBar = new ToolBar(this.tableEditor);
+			this.suggestPopper = new ReferenceSuggestionPopper(this);
+			this.toolBar = new ToolBar(this);
 
 			// 劫持滚动事件
 			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			const stopDefaultScrollFunc = (e: Event) => {
-				// 如果当前正在编辑表格，则屏蔽默认滚动事件
-				if (this.hoverTableId)
-					e.stopImmediatePropagation();
-			}
 			if (markdownView instanceof MarkdownView) {
 				const cm = (markdownView.editor as any).cm;
-				cm.scrollDOM.addEventListener('scroll', stopDefaultScrollFunc, true);
+				this.registerDomEvent(cm.scrollDOM, 'scroll', (e: Event) => {
+					// 如果当前正在编辑表格，则屏蔽默认滚动事件
+					if (this.hoverTableId)
+						e.stopImmediatePropagation();
+				}, true);
 			}
 
-			activeDocument.addEventListener('keydown', async (e) => {
+			this.registerDomEvent(activeDocument, 'keydown', async (e) => {
 
 				if (!this.editingCell)
 					return;
@@ -209,7 +208,7 @@ export default class MyPlugin extends Plugin {
 
 			// 如果没有 hover 任何 cell，或者正在编辑的 cell 不是 hover 的 cell
 			// 正在编辑的 cell 退出编辑状态，并提交更改
-			activeDocument.addEventListener('click', async () => {
+			this.registerDomEvent(activeDocument, 'click', async () => {
 				if (this.editingCell && !isSameCell(this.hoverCell, this.editingCell)) {
 					await this.doneEdit(this.editingCell);
 				}
@@ -217,10 +216,10 @@ export default class MyPlugin extends Plugin {
 
 			// 监听 ctrl
 			this.ctrl = false;
-			activeDocument.addEventListener('keydown', (e) => {
+			this.registerDomEvent(activeDocument, 'keydown', (e) => {
 				if (e.key == 'Ctrl') this.ctrl = true;
 			});
-			activeDocument.addEventListener('keyup', (e) => {
+			this.registerDomEvent(activeDocument, 'keyup', (e) => {
 				if (e.key == 'Ctrl') this.ctrl = false;
 			});
 		});
