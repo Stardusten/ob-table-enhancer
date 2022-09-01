@@ -365,12 +365,12 @@ export class TableEditor {
 			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/))
 				result.push(str.trim());
 		}
-		// 添加行列数
-		result.push(table.cells.length.toString());
-		result.push(table.cells[0].length.toString());
-		const resultStr = result.join('');
+		let resultStr = result.join('');
 		if (resultStr.length == 0)
 			return '空表';
+		// 添加行列数
+		resultStr += table.cells.length.toString();
+		resultStr += table.cells[0].length.toString();
 		return String.fromCharCode(hashCode(resultStr));
 	}
 

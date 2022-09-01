@@ -428,14 +428,14 @@ export default class MyPlugin extends Plugin {
 			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/))
 				result.push(str.trim());
 		}
-		// 添加行列数
-		result.push(table.rows.length.toString());
-		result.push(table.rows[0].cells.length.toString());
 		// 筛去 md 标记符号
-		const resultStr = result.join('');
+		let resultStr = result.join('');
 		// console.log(resultStr);
 		if (resultStr.length == 0)
 			return '空表';
+		// 添加行列数
+		resultStr += table.rows.length.toString();
+		resultStr += table.rows[0].cells.length.toString();
 		return String.fromCharCode(hashCode(resultStr));
 	}
 }
