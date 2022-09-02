@@ -73,8 +73,11 @@ export default class MyPlugin extends Plugin {
 				// <shift-enter> 单元格内换行，md 语法应该是插入一个 <br> 标签
 				if (!e.repeat && e.key == 'Enter' && e.shiftKey && this.editingCell) {
 					e.preventDefault();
-					cell.innerText = cell.innerText + '<br>';
-					setCaretPosition(cell, cell.innerText.length);
+					const prevCaretPos = getCaretPosition(cell);
+					const text1 = cell.innerText.slice(0, prevCaretPos);
+					const text2 = cell.innerText.slice(prevCaretPos + 1);
+					cell.innerText = [text1, ' <br> ', text2].join('');
+					setCaretPosition(cell, prevCaretPos + 6);
 					return;
 				}
 
