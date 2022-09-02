@@ -57,8 +57,10 @@ export default class MyPlugin extends Plugin {
 				const cm = (markdownView.editor as any).cm;
 				this.registerDomEvent(cm.scrollDOM, 'scroll', (e: Event) => {
 					// 如果当前正在编辑表格，则屏蔽默认滚动事件
-					if (this.hoverTableId)
+					// if (this.hoverTableId) {
+						e.preventDefault();
 						e.stopImmediatePropagation();
+					// }
 				}, true);
 			}
 
@@ -292,22 +294,33 @@ export default class MyPlugin extends Plugin {
 								return;
 							}
 
+							// 编辑器失焦，防止聚焦到光标处
+							const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+							if (markdownView instanceof MarkdownView) {
+								const editor = markdownView.editor;
+								editor.blur();
+							}
+
 							// 聚焦
 							cellEl.focus();
 
 							// 先 parse
 							await this.tableEditor.parseActiveFile();
 
-							// 将 cell 内替换为 md 源码
-							const text = this.tableEditor.getCell(this.hoverTableId!, j, k);
-							cellEl.innerText = text;
-
 							// 使这个 cell 可编辑
 							cellEl.setAttr('contenteditable', true);
 
-							// 光标移动到最右侧
-							if (text != '')
+							// 将 cell 内替换为 md 源码
+							const text = this.tableEditor.getCell(this.hoverTableId!, j, k);
+
+							// 避免空串
+							if (text == '') {
+								cellEl.innerText = ' ';
+								setCaretPosition(cellEl, 0);
+							} else {
+								cellEl.innerText = text;
 								setCaretPosition(cellEl, text.length);
+							}
 
 							// 为正在编辑的 cell 添加 class
 							cellEl.classList.add('is-editing');
@@ -405,13 +418,6 @@ export default class MyPlugin extends Plugin {
 			cellElem.innerText, // 加个空格以触发重新渲染
 		);
 
-		// 失焦，防止聚焦到光标处
-		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (markdownView instanceof MarkdownView) {
-			const editor = markdownView.editor;
-			editor.blur();
-		}
-
 		// 取消高亮
 		cellElem.classList.remove('is-editing');
 
@@ -451,6 +457,8 @@ export default class MyPlugin extends Plugin {
 		// 添加行列数
 		resultStr += table.rows.length.toString();
 		resultStr += table.rows[0].cells.length.toString();
+		// console.log(resultStr);
+		// console.log(table);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 

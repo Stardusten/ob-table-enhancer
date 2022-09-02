@@ -6,6 +6,11 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+th, td {
+	height: 2em !important;
+}
+
 .ob-table-enhancer-row-bar {
 	display: flex;
 	position: absolute;

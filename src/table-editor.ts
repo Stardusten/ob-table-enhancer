@@ -34,7 +34,7 @@ export class TableEditor {
 		const fullText = await this.app.vault.read(this.activeFile);
 		this.rows = fullText.split(/\r?\n/);
 		// 匹配格式控制行 XXX 性能考虑，所使用的正则十分简单
-		const formatRowRegex = /^\s*(\|?)(?:[:\-\s|\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]+)+$/;
+		const formatRowRegex = /^\s*(\|)?(?:\s*-+\s*\|){2,}\s*$/;
 		const len = this.rows.length;
 		let existNonStandardTable = false;
 		let i = 0;
@@ -377,7 +377,8 @@ export class TableEditor {
 	private static rowCells2rowString(cells: string[]) {
 		const result = ['|'];
 		for (const cell of cells) {
-			result.push(cell);
+			// 至少留两个空格，防止产生非法表头
+			result.push(cell.length == 0 ? '  ' : cell);
 			result.push('|');
 		}
 		return result.join('');
