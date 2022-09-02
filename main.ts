@@ -7,20 +7,21 @@ import {text} from "stream/consumers";
 import {hashCode, inReadingView} from "./src/editor-utils";
 import {ReferenceSuggestionPopper} from "./src/reference-suggest";
 import {ToolBar} from "./src/tool-bar";
+import {ObTableEnhancerSettingTab} from "./src/setting-tab";
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
-	mySetting: string;
+interface ObTableEnhancerSettings {
+	enableFloatingToolBar: boolean,
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const DEFAULT_SETTINGS: ObTableEnhancerSettings = {
+	enableFloatingToolBar: false,
 }
 
 export default class MyPlugin extends Plugin {
 
-	settings: MyPluginSettings;
+	settings: ObTableEnhancerSettings;
 	tableEditor: TableEditor;
 	/** 当前指针在哪个 table 上 */
 	hoverTableId: string | null;
@@ -36,15 +37,19 @@ export default class MyPlugin extends Plugin {
 	toolBar: ToolBar | null;
 
 	async onload() {
-		this.tableEditor = new TableEditor(this);
+		await this.loadSettings();
+		this.addSettingTab(new ObTableEnhancerSettingTab(this.app, this));
 
+		this.tableEditor = new TableEditor(this);
 		this.editingCell = null;
 		this.hoverCell = null;
 
 		this.app.workspace.onLayoutReady(() => {
 
 			this.suggestPopper = new ReferenceSuggestionPopper(this);
-			this.toolBar = new ToolBar(this);
+
+			if (this.settings.enableFloatingToolBar)
+				this.toolBar = new ToolBar(this);
 
 			// 劫持滚动事件
 			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -447,5 +452,17 @@ export default class MyPlugin extends Plugin {
 		resultStr += table.rows.length.toString();
 		resultStr += table.rows[0].cells.length.toString();
 		return String.fromCharCode(hashCode(resultStr));
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+		// update
+		if (!this.settings.enableFloatingToolBar)
+			this.toolBar = null;
+		else this.toolBar = new ToolBar(this);
 	}
 }
