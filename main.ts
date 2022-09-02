@@ -287,6 +287,9 @@ export default class MyPlugin extends Plugin {
 								return;
 							}
 
+							// 聚焦
+							cellEl.focus();
+
 							// 先 parse
 							await this.tableEditor.parseActiveFile();
 
@@ -296,9 +299,6 @@ export default class MyPlugin extends Plugin {
 
 							// 使这个 cell 可编辑
 							cellEl.setAttr('contenteditable', true);
-
-							// 聚焦
-							cellEl.focus();
 
 							// 光标移动到最右侧
 							if (text != '')
@@ -374,7 +374,10 @@ export default class MyPlugin extends Plugin {
 		}));
 	}
 
-	onunload() {}
+	onunload() {
+		this.suggestPopper?.onUnload();
+		this.toolBar?.onUnload();
+	}
 
 	/**
 	 * 取消一个 cell 的编辑状态
@@ -382,7 +385,7 @@ export default class MyPlugin extends Plugin {
 	 */
 	async doneEdit(cell: Cell) {
 
-		const { rowIndex, colIndex, cellEl: cellElem } = cell;
+		const { tableId, rowIndex, colIndex, cellEl: cellElem } = cell;
 		if (!this.hoverTableId)
 			return;
 
@@ -397,18 +400,22 @@ export default class MyPlugin extends Plugin {
 			cellElem.innerText, // 加个空格以触发重新渲染
 		);
 
+		// 失焦，防止聚焦到光标处
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView) {
+			const editor = markdownView.editor;
+			editor.blur();
+		}
+
 		// 取消高亮
 		cellElem.classList.remove('is-editing');
-
-		// 清空
-		this.editingCell = null;
 
 		// 关闭补全窗口
 		if (this.suggestPopper)
 			this.suggestPopper.disable();
 
-		// 保持聚焦，防止光标跳到编辑器里面
-		cellElem.focus();
+		// 清空 editingCell
+		this.editingCell = null;
 	}
 
 	// 计算表格索引 TODO 是否只取前 n 个 cells

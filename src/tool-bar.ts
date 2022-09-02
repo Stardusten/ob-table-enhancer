@@ -218,10 +218,15 @@ export class ToolBar {
 
 		// 滚动时不显示
 		plugin.registerDomEvent(activeDocument, 'scroll', (e) => {
-			this.colOpBarEl.detach();
-			this.rowOpBarEl.detach();
+			this.colOpBarEl.style.opacity = '0';
+			this.rowOpBarEl.style.opacity = '0';
 			this.activeOpBars = [];
 		}, true);
+
+		if (activeDocument) {
+			activeDocument.body.appendChild(this.rowOpBarEl);
+			activeDocument.body.appendChild(this.colOpBarEl);
+		}
 	}
 
 	/**
@@ -235,14 +240,15 @@ export class ToolBar {
 		// 记录触发 cell
 		this.fromCell = cell;
 		// 先全都 detach
-		this.rowOpBarEl.detach();
-		this.colOpBarEl.detach();
+		this.colOpBarEl.style.opacity = '0';
+		this.rowOpBarEl.style.opacity = '0';
 		this.activeOpBars = [];
 		const cellEl = cell.cellEl;
 		// cell 为表头 cell，展示列操作 toolbar
 		if (cell.rowIndex == 0) {
 			this.activeOpBars.push(this.colOpBarEl);
-			activeDocument?.body.appendChild(this.colOpBarEl);
+			// activeDocument?.body.appendChild(this.colOpBarEl);
+			this.colOpBarEl.style.opacity = '1';
 			const cellRect = cellEl.getBoundingClientRect();
 			const toolBarRect = this.colOpBarEl.getBoundingClientRect();
 			this.colOpBarEl.style.top = `${cellRect.top - toolBarRect.height}px`;
@@ -252,7 +258,8 @@ export class ToolBar {
 		// cell 为第一列的 cell，展示行操作 toolbar
 		if (cell.colIndex == 0) {
 			this.activeOpBars.push(this.rowOpBarEl);
-			activeDocument?.body.appendChild(this.rowOpBarEl);
+			// activeDocument?.body.appendChild(this.rowOpBarEl);
+			this.rowOpBarEl.style.opacity = '1';
 			const cellRect = cellEl.getBoundingClientRect();
 			const toolBarRect = this.rowOpBarEl.getBoundingClientRect();
 			this.rowOpBarEl.style.top = `${cellRect.top}px`;
@@ -268,8 +275,8 @@ export class ToolBar {
 	 */
 	tryHide(timeout: number) {
 		this.hideTimeout = setTimeout(() => {
-			this.colOpBarEl.detach();
-			this.rowOpBarEl.detach();
+			this.colOpBarEl.style.opacity = '0';
+			this.rowOpBarEl.style.opacity = '0';
 			this.activeOpBars = [];
 		}, timeout);
 		const stopHideTimeout = (e: any) => {
@@ -286,5 +293,10 @@ export class ToolBar {
 		this.activeOpBars.forEach((toolbar) => {
 			toolbar.onmouseenter = stopHideTimeout;
 		});
+	}
+
+	onUnload() {
+		this.colOpBarEl.remove();
+		this.rowOpBarEl.remove();
 	}
 }

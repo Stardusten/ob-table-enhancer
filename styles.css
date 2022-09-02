@@ -10,12 +10,15 @@ If your plugin does not need CSS, delete this file.
 	display: flex;
 	position: absolute;
 	width: fit-content;
+	transition: opacity 200ms ease-in-out;
 }
 
 .ob-table-enhancer-col-bar {
 	display: flex;
 	position: absolute;
 	height: fit-content;
+	padding-bottom: 3px;
+	transition: opacity 200ms ease-in-out;
 }
 
 .ob-table-enhancer-row-bar-button {
@@ -44,5 +47,5 @@ If your plugin does not need CSS, delete this file.
 
 .is-editing {
 	filter: brightness(1.5);
-	background-color: var(--bg1);
+	background-color: var(--bg1) !important;
 }

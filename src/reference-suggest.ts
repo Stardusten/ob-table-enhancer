@@ -301,4 +301,8 @@ export class ReferenceSuggestionPopper extends SuggestionPopper<TFile> {
 	onUpdateCandidates(): void | Promise<void> {
 		this.candidates = this.app.vault.getMarkdownFiles();
 	}
+
+	onUnload() {
+		this.containerEl.remove();
+	}
 }
