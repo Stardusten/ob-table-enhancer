@@ -406,6 +406,9 @@ export default class MyPlugin extends Plugin {
 		// 关闭补全窗口
 		if (this.suggestPopper)
 			this.suggestPopper.disable();
+
+		// 保持聚焦，防止光标跳到编辑器里面
+		cellElem.focus();
 	}
 
 	// 计算表格索引 TODO 是否只取前 n 个 cells
