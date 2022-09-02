@@ -72,7 +72,9 @@ export default class MyPlugin extends Plugin {
 
 				// <shift-enter> 单元格内换行，md 语法应该是插入一个 <br> 标签
 				if (!e.repeat && e.key == 'Enter' && e.shiftKey && this.editingCell) {
+					e.preventDefault();
 					cell.innerText = cell.innerText + '<br>';
+					setCaretPosition(cell, cell.innerText.length);
 					return;
 				}
 
@@ -91,8 +93,14 @@ export default class MyPlugin extends Plugin {
 					const { tableId, rowIndex, colIndex } = this.editingCell;
 					// 到最左端了，再按则跳到左边的 cell
 					if (caretPos == 0) {
+						// XXX 如果对表格做了修改，则表索引很可能会改变
+						// 因此在 doneEdit 触发重新渲染后，原有的 tableId 可能是失效的
+						// 但 tab 并不会删除表或者添加表，也就是表在 this.tableEditor 中的下标是不变的
+						// 据此得到新的 tableId
+						const tableIndex = this.tableEditor.getTableIds().indexOf(tableId);
 						await this.doneEdit(this.editingCell);
-						const cellLeft = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
+						const newTableId = this.tableEditor.getTableIds()[tableIndex];
+						const cellLeft = activeDocument.querySelector(`#${newTableId}${rowIndex}${colIndex - 1}`);
 						if (cellLeft instanceof HTMLTableCellElement) {
 							cellLeft.click();
 						}
@@ -110,8 +118,14 @@ export default class MyPlugin extends Plugin {
 					const { tableId, rowIndex, colIndex } = this.editingCell;
 					// 到最右端了，再按则跳到右边的 cell
 					if (caretPos == cell.innerText.length) {
+						// XXX 如果对表格做了修改，则表索引很可能会改变
+						// 因此在 doneEdit 触发重新渲染后，原有的 tableId 可能是失效的
+						// 但 tab 并不会删除表或者添加表，也就是表在 this.tableEditor 中的下标是不变的
+						// 据此得到新的 tableId
+						const tableIndex = this.tableEditor.getTableIds().indexOf(tableId);
 						await this.doneEdit(this.editingCell);
-						const cellRight = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
+						const newTableId = this.tableEditor.getTableIds()[tableIndex];
+						const cellRight = activeDocument.querySelector(`#${newTableId}${rowIndex}${colIndex + 1}`);
 						if (cellRight instanceof HTMLTableCellElement) {
 							cellRight.click();
 						}
@@ -139,8 +153,14 @@ export default class MyPlugin extends Plugin {
 					e.preventDefault();
 					e.stopPropagation();
 					const { tableId, rowIndex, colIndex } = this.editingCell;
+					// XXX 如果对表格做了修改，则表索引很可能会改变
+					// 因此在 doneEdit 触发重新渲染后，原有的 tableId 可能是失效的
+					// 但 tab 并不会删除表或者添加表，也就是表在 this.tableEditor 中的下标是不变的
+					// 据此得到新的 tableId
+					const tableIndex = this.tableEditor.getTableIds().indexOf(tableId);
 					await this.doneEdit(this.editingCell);
-					const cellAbove = activeDocument.querySelector(`#${tableId}${rowIndex - 1}${colIndex}`);
+					const newTableId = this.tableEditor.getTableIds()[tableIndex];
+					const cellAbove = activeDocument.querySelector(`#${newTableId}${rowIndex - 1}${colIndex}`);
 					if (cellAbove instanceof HTMLTableCellElement) {
 						cellAbove.click();
 					}
@@ -153,8 +173,14 @@ export default class MyPlugin extends Plugin {
 					e.preventDefault();
 					e.stopPropagation();
 					const { tableId, rowIndex, colIndex } = this.editingCell;
+					// XXX 如果对表格做了修改，则表索引很可能会改变
+					// 因此在 doneEdit 触发重新渲染后，原有的 tableId 可能是失效的
+					// 但 tab 并不会删除表或者添加表，也就是表在 this.tableEditor 中的下标是不变的
+					// 据此得到新的 tableId
+					const tableIndex = this.tableEditor.getTableIds().indexOf(tableId);
 					await this.doneEdit(this.editingCell);
-					const cellBelow = activeDocument.querySelector(`#${tableId}${rowIndex + 1}${colIndex}`);
+					const newTableId = this.tableEditor.getTableIds()[tableIndex];
+					const cellBelow = activeDocument.querySelector(`#${newTableId}${rowIndex + 1}${colIndex}`);
 					if (cellBelow instanceof HTMLTableCellElement) {
 						cellBelow.click();
 					}
@@ -168,18 +194,24 @@ export default class MyPlugin extends Plugin {
 					e.preventDefault();
 					e.stopPropagation();
 					const { tableId, rowIndex, colIndex } = this.editingCell;
+					// XXX 如果对表格做了修改，则表索引很可能会改变
+					// 因此在 doneEdit 触发重新渲染后，原有的 tableId 可能是失效的
+					// 但 tab 并不会删除表或者添加表，也就是表在 this.tableEditor 中的下标是不变的
+					// 据此得到新的 tableId
+					const tableIndex = this.tableEditor.getTableIds().indexOf(tableId);
 					await this.doneEdit(this.editingCell);
-					const table = this.tableEditor.tables.get(tableId);
+					const newTableId = this.tableEditor.getTableIds()[tableIndex];
+					const table = this.tableEditor.tables.get(newTableId);
 					if (table) {
 						const rowNum = table.cells.length;
 						const colNum = table.cells[0].length;
 						let nextCell;
 						if (rowIndex == 0 && colIndex == 0) {
-							nextCell = activeDocument.querySelector(`#${tableId}${rowNum - 1}${colNum - 1}`);
+							nextCell = activeDocument.querySelector(`#${newTableId}${rowNum - 1}${colNum - 1}`);
 						} else if (colIndex == 0) {
-							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex - 1}${colNum - 1}`);
+							nextCell = activeDocument.querySelector(`#${newTableId}${rowIndex - 1}${colNum - 1}`);
 						} else {
-							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex - 1}`);
+							nextCell = activeDocument.querySelector(`#${newTableId}${rowIndex}${colIndex - 1}`);
 						}
 						if (nextCell instanceof HTMLTableCellElement)
 							nextCell.click();
@@ -193,18 +225,24 @@ export default class MyPlugin extends Plugin {
 					e.preventDefault();
 					e.stopPropagation();
 					const { tableId, rowIndex, colIndex } = this.editingCell;
+					// XXX 如果对表格做了修改，则表索引很可能会改变
+					// 因此在 doneEdit 触发重新渲染后，原有的 tableId 可能是失效的
+					// 但 tab 并不会删除表或者添加表，也就是表在 this.tableEditor 中的下标是不变的
+					// 据此得到新的 tableId
+					const tableIndex = this.tableEditor.getTableIds().indexOf(tableId);
 					await this.doneEdit(this.editingCell);
-					const table = this.tableEditor.tables.get(tableId);
+					const newTableId = this.tableEditor.getTableIds()[tableIndex];
+					const table = this.tableEditor.tables.get(newTableId);
 					if (table) {
 						const rowNum = table.cells.length;
 						const colNum = table.cells[0].length;
 						let nextCell;
 						if (rowIndex == rowNum - 1 && colIndex == colNum - 1) {
-							nextCell = activeDocument.querySelector(`#${tableId}00`);
+							nextCell = activeDocument.querySelector(`#${newTableId}00`);
 						} else if (colIndex == colNum - 1) {
-							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex + 1}0`);
+							nextCell = activeDocument.querySelector(`#${newTableId}${rowIndex + 1}0`);
 						} else {
-							nextCell = activeDocument.querySelector(`#${tableId}${rowIndex}${colIndex + 1}`);
+							nextCell = activeDocument.querySelector(`#${newTableId}${rowIndex}${colIndex + 1}`);
 						}
 						if (nextCell instanceof HTMLTableCellElement)
 							nextCell.click();
@@ -304,7 +342,8 @@ export default class MyPlugin extends Plugin {
 							// 聚焦
 							cellEl.focus();
 
-							// 先 parse
+							// parse
+							// 注意：由于 parseActiveFile 做了一致性检查，因此反复调用不会造成额外开销
 							await this.tableEditor.parseActiveFile();
 
 							// 使这个 cell 可编辑
@@ -341,7 +380,6 @@ export default class MyPlugin extends Plugin {
 			menu.addItem((item) => {
 				item.setTitle('Create 2x2 table');
 				item.onClick(async () => {
-					// 先 parse
 					await this.tableEditor.parseActiveFile();
 					await this.tableEditor.createMinimalNewTable();
 				})
@@ -363,28 +401,24 @@ export default class MyPlugin extends Plugin {
 						new Notice('You can\'t delete header of a table.');
 						return;
 					}
-					// 先 parse
 					await this.tableEditor.parseActiveFile();
 					await this.tableEditor.deleteRow(hoverTableId, hoverCellRowIndex);
 				})
 			}).addItem((item) => {
 				item.setTitle('Delete column');
 				item.onClick(async () => {
-					// 先 parse
 					await this.tableEditor.parseActiveFile();
 					await this.tableEditor.deleteCol(hoverTableId, hoverCellColIndex);
 				})
 			}).addItem((item) => {
 				item.setTitle('Insert row below');
 				item.onClick(async () => {
-					// 先 parse
 					await this.tableEditor.parseActiveFile();
 					await this.tableEditor.insertRowBelow(hoverTableId, hoverCellRowIndex);
 				})
 			}).addItem((item) => {
 				item.setTitle('Insert column right (left aligned)');
 				item.onClick(async () => {
-					// 先 parse
 					await this.tableEditor.parseActiveFile();
 					await this.tableEditor.insertColRight(hoverTableId, hoverCellColIndex);
 				})
@@ -417,6 +451,9 @@ export default class MyPlugin extends Plugin {
 			colIndex,
 			cellElem.innerText, // 加个空格以触发重新渲染
 		);
+
+		// parse
+		await this.tableEditor.parseActiveFile();
 
 		// 取消高亮
 		cellElem.classList.remove('is-editing');
@@ -457,7 +494,7 @@ export default class MyPlugin extends Plugin {
 		// 添加行列数
 		resultStr += table.rows.length.toString();
 		resultStr += table.rows[0].cells.length.toString();
-		// console.log(resultStr);
+		console.log(resultStr);
 		// console.log(table);
 		return String.fromCharCode(hashCode(resultStr));
 	}

@@ -16,15 +16,42 @@ export class TableEditor {
 	activeFile: TFile | null;
 	tables: Map<string, Table>;
 	rows: string[];
+	/** 标记，记录与文件不一致时为 true */
+	isDirty: boolean;
 
 	constructor(plugin: MyPlugin) {
 		this.app = plugin.app;
+		this.isDirty = true;
+		this.app.vault.on('modify', (modifiedFile) => {
+			const activeFile = this.app.workspace.getActiveFile();
+			if (activeFile && activeFile.path == modifiedFile.path) {
+				this.isDirty = true;
+			}
+		});
+	}
+
+	/**
+	 * 获得一个包含所有表 id 的数组，顺序为表在文档中的顺序
+	 */
+	getTableIds() {
+		return [ ...this.tables.keys() ];
 	}
 
 	/**
 	 * 解析当前激活文件中的所有表格
+	 *
+	 * 由于 parseActiveFile 做了一致性检查，因此反复调用不会造成额外开销
 	 */
 	async parseActiveFile() {
+		// parse 前先保存，确保所有修改已经持久化到文件
+		// 经测试，如果没有对文件做修改，保存不会触发 file modify 事件
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView)
+			await markdownView.save(); // 导致 parse 两次？
+		// 如果记录与文件一致，直接返回
+		if (!this.isDirty)
+			return;
+		// 获得 activeFile
 		this.activeFile = this.app.workspace.getActiveFile();
 		if (!this.activeFile)
 			return;
@@ -34,7 +61,7 @@ export class TableEditor {
 		const fullText = await this.app.vault.read(this.activeFile);
 		this.rows = fullText.split(/\r?\n/);
 		// 匹配格式控制行 XXX 性能考虑，所使用的正则十分简单
-		const formatRowRegex = /^\s*(\|)?(?:\s*-+\s*\|){2,}\s*$/;
+		const formatRowRegex = /^\s*(\|)?(?:\s*:?\s*?-+\s*:?\s*\|){2,}/;
 		const len = this.rows.length;
 		let existNonStandardTable = false;
 		let i = 0;
@@ -97,6 +124,7 @@ export class TableEditor {
 			await this.app.vault.modify(this.activeFile, fullTextAfterStandardize);
 		}
 		// console.log(this.tables);
+		this.isDirty = false;
 	}
 
 	/**
@@ -371,6 +399,7 @@ export class TableEditor {
 		// 添加行列数
 		resultStr += table.cells.length.toString();
 		resultStr += table.cells[0].length.toString();
+		console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 
