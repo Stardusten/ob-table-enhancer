@@ -7,7 +7,9 @@ If your plugin does not need CSS, delete this file.
 
 */
 
-th, td {
+.markdown-rendered thead > tr > th, .markdown-rendered tbody > tr > td {
+	text-overflow: unset !important;
+	word-break: break-word !important;
 	height: 2em !important;
 }
 

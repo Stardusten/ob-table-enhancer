@@ -325,11 +325,17 @@ export default class MyPlugin extends Plugin {
 
 							// 如果之前正在编辑 cell，则取消之
 							if (this.editingCell && !isSameCell(this.editingCell, this.hoverCell)) {
+								// XXX 如果对表格做了修改，则表索引很可能会改变
+								// 因此在 doneEdit 触发重新渲染后，原有的 tableId 可能是失效的
+								// 但 tab 并不会删除表或者添加表，也就是表在 this.tableEditor 中的下标是不变的
+								// 据此得到新的 tableId
+								const tableIndex = this.tableEditor.getTableIds().indexOf(tableId);
 								await this.doneEdit(this.editingCell);
 								// 取消编辑状态后，整个编辑器会重新渲染
 								// 因此需要终止当前事件回调
 								// 触发渲染后新元素的事件回调
-								const newCell = activeDocument.querySelector(`#${tableId}${j}${k}`);
+								const newTableId = this.tableEditor.getTableIds()[tableIndex];
+								const newCell = activeDocument.querySelector(`#${newTableId}${j}${k}`);
 								if (newCell instanceof HTMLTableCellElement)
 									newCell.click();
 								return;
