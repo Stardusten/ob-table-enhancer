@@ -375,6 +375,37 @@ export class TableEditor {
 		}
 	}
 
+	/**
+	 * 交换两列
+	 * @param tableId
+	 * @param colIndex1 第一列下标
+	 * @param colIndex2 第二列下标
+	 */
+	async swapCols(tableId: string, colIndex1: number, colIndex2: number) {
+		const table = this.tables.get(tableId);
+		if (!table) return;
+		const colNum = table.cells[0].length;
+		if (colIndex1 < 0 || colIndex2 < 0 || colIndex1 >= colNum || colIndex2 >= colNum) {
+			new Notice('Move out of range');
+			return;
+		}
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView) {
+			// 使用 editor transaction 更新，性能更好
+			const editor = markdownView.editor;
+			// 先处理格式控制行
+			[ table.formatRow[colIndex1], table.formatRow[colIndex2] ]
+				= [ table.formatRow[colIndex2], table.formatRow[colIndex1]];
+			setLineWithoutScroll(editor, table.fromRowIndex + 1, TableEditor.rowCells2rowString(table.formatRow));
+			for (let i = 0; i < table.cells.length; i++) {
+				const lineNumber = this.getLineNumber(table, i);
+				[ table.cells[i][colIndex1], table.cells[i][colIndex2] ]
+					= [ table.cells[i][colIndex2], table.cells[i][colIndex1]];
+				setLineWithoutScroll(editor, lineNumber, TableEditor.rowCells2rowString(table.cells[i]));
+			}
+		}
+	}
+
 	private static getIdentifier(table: Table) {
 		const result = [];
 		const rowNum = table.cells.length;

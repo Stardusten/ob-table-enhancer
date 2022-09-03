@@ -119,6 +119,44 @@ const rightAlignedIcon = `
 </svg>
 `;
 
+const moveRightIcon = `
+<svg
+	t="1662187765148"
+	class="icon"
+	viewBox="0 0 1024 1024"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+	p-id="9678"
+	width="16"
+	height="16"
+>
+	<path
+		d="M593.450667 512.128L360.064 278.613333l45.290667-45.226666 278.613333 278.762666L405.333333 790.613333l-45.226666-45.269333z" 
+		p-id="9679"
+		fill="currentColor"
+    	stroke="currentColor"
+	></path>
+</svg>`;
+
+const moveLeftIcon = `
+<svg
+	t="1662188090144"
+	class="icon"
+	viewBox="0 0 1024 1024"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+	p-id="6067"
+	width="16"
+	height="16"
+>
+	<path
+		d="M641.28 278.613333l-45.226667-45.226666-278.634666 278.762666 278.613333 278.485334 45.248-45.269334-233.365333-233.237333z"
+		p-id="6068"
+		fill="currentColor"
+    	stroke="currentColor"
+	></path>
+</svg>`;
+
 export class ToolBar {
 
 	tableEditor: TableEditor;
@@ -154,6 +192,16 @@ export class ToolBar {
 		this.colOpBarEl.createDiv({
 			cls: 'ob-table-enhancer-col-bar-button'
 		}, (el) => {
+			el.innerHTML = moveLeftIcon;
+			el.onclick = async () => {
+				// 先 parse
+				await this.tableEditor.parseActiveFile();
+				await this.tableEditor.swapCols(this.fromCell.tableId, this.fromCell.colIndex, this.fromCell.colIndex - 1);
+			}
+		});
+		this.colOpBarEl.createDiv({
+			cls: 'ob-table-enhancer-col-bar-button'
+		}, (el) => {
 			el.innerHTML = insertRightIcon;
 			el.onclick = async () => {
 				// 先 parse
@@ -173,6 +221,16 @@ export class ToolBar {
 				// 先 parse
 				await this.tableEditor.parseActiveFile();
 				await this.tableEditor.deleteRow(this.fromCell.tableId, this.fromCell.rowIndex);
+			}
+		});
+		this.colOpBarEl.createDiv({
+			cls: 'ob-table-enhancer-col-bar-button'
+		}, (el) => {
+			el.innerHTML = moveRightIcon;
+			el.onclick = async () => {
+				// 先 parse
+				await this.tableEditor.parseActiveFile();
+				await this.tableEditor.swapCols(this.fromCell.tableId, this.fromCell.colIndex, this.fromCell.colIndex + 1);
 			}
 		});
 		this.colOpBarEl.createDiv({
