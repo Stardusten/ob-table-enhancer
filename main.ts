@@ -278,6 +278,8 @@ export default class MyPlugin extends Plugin {
 				// 忽略 dataview 的表格
 				if (table.classList.contains('dataview'))
 					return;
+				table.classList.add('ob-table-enhancer');
+				// 计算 tableId
 				const tableId = this.getIdentifier(table);
 				// console.log(tableId);
 				// 监听当前 hover 的 table
@@ -480,7 +482,8 @@ export default class MyPlugin extends Plugin {
 		const result = [];
 		const rowNum = table.rows.length;
 		for (let i = 0; i < rowNum; i ++) {
-			const str = table.rows[i].cells[0].innerHTML.replace(/&nbsp;/gi,'');
+			const str = table.rows[i].cells[0].innerHTML
+				.replace(/&nbsp;/gi,'');
 			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
 			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/)) {
@@ -496,7 +499,7 @@ export default class MyPlugin extends Plugin {
 				result.push(str.trim());
 		}
 		// 筛去 md 标记符号
-		let resultStr = result.join('');
+		let resultStr = result.join('').replace(/\s/g, '');
 		// console.log(resultStr);
 		if (resultStr.length == 0)
 			return '空表';

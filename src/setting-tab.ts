@@ -25,5 +25,13 @@ export class ObTableEnhancerSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				});
 			})
+			// .then((setting) => {
+			// 	const item = setting.settingEl.createDiv({ cls: 'setting-item' });
+			// 	const info = item.createDiv({ cls: 'setting-item-info' });
+			// 	info.createDiv({ text: 'Column Buttons', cls: 'setting-item-name'});
+			// 	const control = item.createDiv({ cls: 'setting-item-control' });
+			// 	for (const icon of )
+			// })
+
 	}
 }

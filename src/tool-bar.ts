@@ -3,7 +3,7 @@ import {TableEditor} from "./table-editor";
 import {Cell} from "./table";
 import MyPlugin from "../main";
 
-const insertBelowIcon = `
+export const insertBelowIcon = `
 <svg
 	t="1661842034318"
 	class="icon"
@@ -22,7 +22,7 @@ const insertBelowIcon = `
 	></path>
 </svg>`;
 
-const deleteIcon = `
+export const deleteIcon = `
 <svg
 	t="1661781161180"
 	class="icon"
@@ -42,7 +42,7 @@ const deleteIcon = `
 	</path>
 </svg>`;
 
-const insertRightIcon = `
+export const insertRightIcon = `
 <svg
 	t="1661842059940"
 	class="icon"
@@ -61,7 +61,7 @@ const insertRightIcon = `
 	></path>
 </svg>`;
 
-const centerAlignedIcon = `
+export const centerAlignedIcon = `
 <svg 
 	t="1661840940089"
 	class="icon"
@@ -81,7 +81,7 @@ const centerAlignedIcon = `
 	</path>
 </svg>`;
 
-const leftAlignedIcon = `
+export const leftAlignedIcon = `
 <svg 
 	t="1661841114814"
 	class="icon"
@@ -99,7 +99,7 @@ const leftAlignedIcon = `
 </svg>
 `;
 
-const rightAlignedIcon = `
+export const rightAlignedIcon = `
 <svg
 	t="1661841218626"
 	class="icon"
@@ -119,7 +119,7 @@ const rightAlignedIcon = `
 </svg>
 `;
 
-const moveRightIcon = `
+export const moveRightIcon = `
 <svg
 	t="1662187765148"
 	class="icon"
@@ -138,7 +138,7 @@ const moveRightIcon = `
 	></path>
 </svg>`;
 
-const moveLeftIcon = `
+export const moveLeftIcon = `
 <svg
 	t="1662188090144"
 	class="icon"
