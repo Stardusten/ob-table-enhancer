@@ -230,6 +230,33 @@ export class TableEditor {
 	}
 
 	/**
+	 * 通过在表头后插入 \u3000 修改列宽
+	 * @param tableId
+	 * @param colIndex
+	 * @param delta
+	 */
+	async changeColWidth(tableId: string, colIndex: number, delta: 1 | -1) {
+		const table = this.tables.get(tableId);
+		if (!table) return;
+		if (delta == -1)
+			table.cells[0][colIndex] = table.cells[0][colIndex].replace(/ $/, '');
+		else // delta == 1
+			table.cells[0][colIndex] = [table.cells[0][colIndex], ' '].join('');
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView) {
+			// 使用 editor transaction 更新，性能更好
+			const editor = markdownView.editor;
+			const rowLineNumber = this.getLineNumber(table, 0);
+			const newLine = TableEditor.rowCells2rowString(table.cells[0]);
+			// 防止没有对文本做修改，导致不触发重新渲染
+			if (editor.getLine(rowLineNumber).length == newLine.length)
+				setLineWithoutScroll(editor, rowLineNumber, newLine + ' ');
+			setLineWithoutScroll(editor, rowLineNumber, newLine);
+			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
+		}
+	}
+
+	/**
 	 * 删除表格的指定行
 	 * @param tableId
 	 * @param rowIndex 要删除哪一行
@@ -430,7 +457,7 @@ export class TableEditor {
 		// 添加行列数
 		resultStr += table.cells.length.toString();
 		resultStr += table.cells[0].length.toString();
-		console.log(resultStr);
+		// console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 

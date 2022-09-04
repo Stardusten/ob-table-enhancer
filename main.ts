@@ -8,6 +8,7 @@ import {hashCode, inReadingView} from "./src/editor-utils";
 import {ReferenceSuggestionPopper} from "./src/reference-suggest";
 import {ToolBar} from "./src/tool-bar";
 import {ObTableEnhancerSettingTab} from "./src/setting-tab";
+import {Arr} from "tern";
 
 // Remember to rename these classes and interfaces!
 
@@ -274,7 +275,7 @@ export default class MyPlugin extends Plugin {
 
 		this.registerMarkdownPostProcessor((element, context) => {
 			const tables = element.querySelectorAll('table');
-			tables.forEach((table) => {
+			tables.forEach(async (table) => {
 				// 忽略 dataview 的表格
 				if (table.classList.contains('dataview'))
 					return;
@@ -301,6 +302,20 @@ export default class MyPlugin extends Plugin {
 						const cellEl = row.cells[k];
 						// 设置 id
 						cellEl.setAttr('id', `${tableId}${j}${k}`);
+						// 处理函数
+						if (cellEl.innerText.startsWith('>>>')) {
+							await this.tableEditor.parseActiveFile();
+							// 环境变量
+							const t = this.tableEditor?.tables?.get(tableId);
+							const c = t?.cells.map(row => row[k]).slice(1, -1);
+							const nc: any = t?.cells.map(row => row[k]).slice(1, -1).map(e => parseFloat(e));
+							const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0.0);
+							try {
+								cellEl.innerText = ((str: string) => eval(str)).call({
+									t, c, nc, sum
+								}, cellEl.innerText.replace(/^>>>/, ''));
+							} catch (err) { console.error(err); }
+						}
 						// 监听当前 hover 的 cell
 						cellEl.onmouseenter = (e) => {
 							this.hoverCell = {
@@ -489,7 +504,7 @@ export default class MyPlugin extends Plugin {
 				.replace(/&nbsp;/gi,'');
 			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
-			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/)) {
+			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$&=]/)) {
 				result.push(str.trim());
 			}
 		}
@@ -498,7 +513,7 @@ export default class MyPlugin extends Plugin {
 			const str = table.rows[0].cells[i].innerHTML.replace(/&nbsp;/gi,'');
 			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
-			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/))
+			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$&=]/))
 				result.push(str.trim());
 		}
 		// 筛去 md 标记符号
@@ -509,7 +524,7 @@ export default class MyPlugin extends Plugin {
 		// 添加行列数
 		resultStr += table.rows.length.toString();
 		resultStr += table.rows[0].cells.length.toString();
-		console.log(resultStr);
+		// console.log(resultStr);
 		// console.log(table);
 		return String.fromCharCode(hashCode(resultStr));
 	}
