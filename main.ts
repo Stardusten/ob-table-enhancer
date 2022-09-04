@@ -278,6 +278,9 @@ export default class MyPlugin extends Plugin {
 				// 忽略 dataview 的表格
 				if (table.classList.contains('dataview'))
 					return;
+				// 忽略 admonition 内的表格
+				if (table.parentElement && table.parentElement.classList.contains('admonition-content'))
+					return;
 				table.classList.add('ob-table-enhancer');
 				// 计算 tableId
 				const tableId = this.getIdentifier(table);
@@ -341,13 +344,6 @@ export default class MyPlugin extends Plugin {
 								if (newCell instanceof HTMLTableCellElement)
 									newCell.click();
 								return;
-							}
-
-							// 编辑器失焦，防止聚焦到光标处
-							const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-							if (markdownView instanceof MarkdownView) {
-								const editor = markdownView.editor;
-								editor.blur();
 							}
 
 							// 聚焦
@@ -460,7 +456,7 @@ export default class MyPlugin extends Plugin {
 			this.hoverTableId,
 			rowIndex,
 			colIndex,
-			cellElem.innerText, // 加个空格以触发重新渲染
+			cellElem.innerText,
 		);
 
 		// parse
@@ -472,6 +468,13 @@ export default class MyPlugin extends Plugin {
 		// 关闭补全窗口
 		if (this.suggestPopper)
 			this.suggestPopper.disable();
+
+		// 编辑器失焦，防止聚焦到光标处
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView) {
+			const editor = markdownView.editor;
+			editor.blur();
+		}
 
 		// 清空 editingCell
 		this.editingCell = null;

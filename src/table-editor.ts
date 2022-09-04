@@ -186,12 +186,12 @@ export class TableEditor {
 	 * @param tableId 表格的 Id
 	 * @param rowIndex 哪一行
 	 * @param colIndex 哪一列
-	 * @return 出现任何错误将返回空串 ''
+	 * @return 出现任何错误将返回含一个空格的串
 	 */
 	getCell(tableId: string, rowIndex: number, colIndex: number) {
 		try {
-			return this.tables.get(tableId)!.cells[rowIndex][colIndex].trim();
-		} catch (e) { return ''; }
+			return this.tables.get(tableId)!.cells[rowIndex][colIndex];
+		} catch (e) { return ' '; }
 	}
 
 	/**
