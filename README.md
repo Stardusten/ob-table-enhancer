@@ -28,26 +28,37 @@
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252052416.gif)
 
-6. 删除行
-
-   ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252056998.gif)
-
-7. 删除列
-
-   ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252055477.gif)
-
-8. 当前行下方插入新行
-
-   ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252059685.gif)
-
-9. 当前列右侧插入新列
-
-   ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252102032.gif)
-
-10. 单元格内支持引用补全，补全使用官方模糊匹配函数，支持高亮匹配子串
+6. 单元格内支持引用补全，补全使用官方模糊匹配函数，支持高亮匹配子串
 
 	![ob-plugin](https://user-images.githubusercontent.com/38722307/187054193-bb0e837c-8817-4cf3-9f49-cd231c1d8b71.gif)
 
-11. 鼠标悬浮到行首 / 列首单元格时，会显示一个悬浮工具栏，提供插入 / 删除行 / 列，调整对齐功能
+7. 鼠标悬浮到行首 / 列首单元格时，会显示一个悬浮工具栏，提供插入 / 删除行 / 列，调整对齐功能
 
-	![ob-plugin](https://user-images.githubusercontent.com/38722307/187380007-c76e72b4-31b2-4b89-a7e5-3a8bb5338e78.gif)
+	![ob-plugin](https://user-images.githubusercontent.com/38722307/188336965-3ef0e167-cb01-4bd7-acfc-2e827bab2629.gif)
+	
+8. 可以在单元格内写 js 函数，渲染时自动执行，实现表格数据分析
+
+	![ob-plugin](https://user-images.githubusercontent.com/38722307/188336844-a3bcf252-2552-4d42-99a2-bf2a45db6272.gif)
+
+## 关于单元格内执行 js 函数的说明
+
+- `c`：获得当前列（不包含表头和所在单元格），返回一个**字符数组**
+- `nc`：获得当前列（不包含表头和所在单元格），返回一个**数字数组**
+- `t`：获得当前表格（具体内容 `console.log` 查看）
+
+内置函数：
+
+- `sum`：求一个数字数组的和
+- `avg`：求一个数字数组的平均值
+- `min`：求一个数字数组的最小值
+- `max`：求一个数字数组的最大值
+
+几个例子
+
+```js
+>>> sum(nc)	 // 计算当前列所有数的和
+>>> sum(nc.filter(e=>e>0)) // 计算当前列所有正数的和
+>>> avg(nc) // 计算当前列的均值
+>>> min(nc) // 计算当前列的最小值
+>>> c.filter(e=>e.contains('TODO')).length // 计算当前列有多少个格子包含 TODO
+```
