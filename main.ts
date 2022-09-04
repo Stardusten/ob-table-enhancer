@@ -456,7 +456,7 @@ export default class MyPlugin extends Plugin {
 			this.hoverTableId,
 			rowIndex,
 			colIndex,
-			cellElem.innerText,
+			cellElem.innerText.trim(),
 		);
 
 		// parse
