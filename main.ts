@@ -310,9 +310,12 @@ export default class MyPlugin extends Plugin {
 							const c = t?.cells.map(row => row[k]).slice(1, -1);
 							const nc: any = t?.cells.map(row => row[k]).slice(1, -1).map(e => parseFloat(e));
 							const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0.0);
+							const avg = (arr: number[]) => sum(arr) / arr.length;
+							const max = (arr: number[]) => Math.max( ...arr );
+							const min = (arr: number[]) => Math.min( ...arr );
 							try {
 								cellEl.innerText = ((str: string) => eval(str)).call({
-									t, c, nc, sum
+									t, c, nc, sum, avg, min, max
 								}, cellEl.innerText.replace(/^>>>/, ''));
 							} catch (err) { console.error(err); }
 						}
