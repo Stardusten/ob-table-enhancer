@@ -32,9 +32,10 @@
 
 	![ob-plugin](https://user-images.githubusercontent.com/38722307/187054193-bb0e837c-8817-4cf3-9f49-cd231c1d8b71.gif)
 
-7. 鼠标悬浮到行首 / 列首单元格时，会显示一个悬浮工具栏，提供插入 / 删除行 / 列，调整对齐功能
+7. 鼠标悬浮到行首 / 列首单元格时，会显示一个悬浮工具栏，提供插入 / 删除行 / 列，调整对齐，左右移动列等功能
 
-	![ob-plugin](https://user-images.githubusercontent.com/38722307/188336965-3ef0e167-cb01-4bd7-acfc-2e827bab2629.gif)
+	![ob-plugin](https://user-images.githubusercontent.com/38722307/188337779-8c205194-85d2-47ea-bd6d-79aee1812d93.gif)
+
 	
 8. 可以在单元格内写 js 函数，渲染时自动执行，实现表格数据分析
 
