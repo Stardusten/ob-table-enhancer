@@ -484,7 +484,7 @@ export class TableEditor {
 		// 添加行列数
 		resultStr += table.cells.length.toString();
 		resultStr += table.cells[0].length.toString();
-		console.log(resultStr);
+		// console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 

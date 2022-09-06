@@ -14,10 +14,12 @@ import {Arr} from "tern";
 
 interface ObTableEnhancerSettings {
 	enableFloatingToolBar: boolean,
+	enableInReadingMode: boolean,
 }
 
 const DEFAULT_SETTINGS: ObTableEnhancerSettings = {
 	enableFloatingToolBar: false,
+	enableInReadingMode: false,
 }
 
 export default class MyPlugin extends Plugin {
@@ -342,7 +344,7 @@ export default class MyPlugin extends Plugin {
 							e.stopPropagation();
 
 							// 按下了 ctrl，或处于 reading 模式，则不触发编辑
-							if (this.ctrl || inReadingView())
+							if (this.ctrl || (!this.settings.enableInReadingMode && inReadingView()))
 								return;
 
 							// 已经处于编辑模式，防止再次触发
@@ -527,7 +529,7 @@ export default class MyPlugin extends Plugin {
 				.replace(/&nbsp;/gi,'');
 			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
-			if (str != '' && !str.match(/[!<>*#\[\]`$&=]/)) {
+			if (str != '' && !str.match(/ [!<>*#\[\]`$&=]/)) {
 				result.push(str.replace(/[\r\n\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\ufeff]/g, ''));
 			}
 		}
@@ -547,7 +549,7 @@ export default class MyPlugin extends Plugin {
 		// 添加行列数
 		resultStr += table.rows.length.toString();
 		resultStr += table.rows[0].cells.length.toString();
-		console.log(resultStr);
+		// console.log(resultStr);
 		// console.log(table);
 		return String.fromCharCode(hashCode(resultStr));
 	}

@@ -24,14 +24,16 @@ export class ObTableEnhancerSettingTab extends PluginSettingTab {
 					this.plugin.settings.enableFloatingToolBar = val;
 					await this.plugin.saveSettings();
 				});
-			})
-			// .then((setting) => {
-			// 	const item = setting.settingEl.createDiv({ cls: 'setting-item' });
-			// 	const info = item.createDiv({ cls: 'setting-item-info' });
-			// 	info.createDiv({ text: 'Column Buttons', cls: 'setting-item-name'});
-			// 	const control = item.createDiv({ cls: 'setting-item-control' });
-			// 	for (const icon of )
-			// })
+			});
 
+		new Setting(containerEl)
+			.setName('Enable in reading mode')
+			.addToggle((component) => {
+				component.setValue(this.plugin.settings.enableInReadingMode);
+				component.onChange(async (val) => {
+					this.plugin.settings.enableInReadingMode = val;
+					await this.plugin.saveSettings();
+				});
+			});
 	}
 }

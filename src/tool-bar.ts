@@ -355,7 +355,7 @@ export class ToolBar {
 	 * @param cell
 	 */
 	tryShowFor(cell: Cell) {
-		if (inReadingView())
+		if (!this.plugin.settings.enableInReadingMode && inReadingView())
 			return;
 		// 清除隐藏计时
 		if (this.hideTimeout)
