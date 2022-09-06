@@ -5,7 +5,7 @@ import {
 	deleteLines,
 	hashCode,
 	insertLineBelow,
-	insertLineBelowWithText,
+	insertLineBelowWithText, replaceRangeWithoutScroll,
 	setLineWithoutScroll
 } from "./editor-utils";
 import MyPlugin from "../main";
@@ -430,6 +430,25 @@ export class TableEditor {
 					= [ table.cells[i][colIndex2], table.cells[i][colIndex1]];
 				setLineWithoutScroll(editor, lineNumber, TableEditor.rowCells2rowString(table.cells[i]));
 			}
+			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
+		}
+	}
+
+	/**
+	 * 删除整个表
+	 * @param tableId 待删除表的 id
+	 */
+	async deleteEntireTable(tableId: string) {
+		const table = this.tables.get(tableId);
+		if (!table) return;
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView) {
+			// 使用 editor transaction 更新，性能更好
+			const editor = markdownView.editor;
+			replaceRangeWithoutScroll(editor, '',
+				{ line: table.fromRowIndex, ch: 0 },
+				{line: table.toRowIndex, ch: 0});
+			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}
 

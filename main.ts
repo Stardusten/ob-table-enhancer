@@ -274,6 +274,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.registerMarkdownPostProcessor((element, context) => {
+			// console.log(element);
 			const tables = element.querySelectorAll('table');
 			tables.forEach(async (table) => {
 				// 忽略 dataview 的表格
@@ -282,10 +283,12 @@ export default class MyPlugin extends Plugin {
 				// 忽略 admonition 内的表格
 				if (table.parentElement && table.parentElement.classList.contains('admonition-content'))
 					return;
-				table.classList.add('ob-table-enhancer');
 				// 计算 tableId
 				const tableId = this.getIdentifier(table);
-				// console.log(tableId);
+				// 添加 class
+				table.classList.add('ob-table-enhancer');
+				// 添加 id
+				table.setAttr('id', tableId);
 				// 监听当前 hover 的 table
 				table.onmouseenter = (e) => {
 					this.hoverTableId = tableId;
@@ -400,54 +403,42 @@ export default class MyPlugin extends Plugin {
 			});
 		});
 
+		this.addCommand({
+			id: 'insert2x2table',
+			name: 'Insert 2x2 table',
+			callback: async () => {
+				await this.tableEditor.parseActiveFile();
+				await this.tableEditor.createMinimalNewTable();
+			}
+		});
+
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor, view) => {
+			if (this.hoverTableId) {
+				menu.addItem((item) => {
+					item.setTitle('Copy as HTML');
+					item.onClick(async (e) => {
+						const tableEl = activeDocument.querySelector(`#${this.hoverTableId}`);
+						if (!(tableEl instanceof HTMLTableElement))
+							return;
+						activeWindow.getSelection()?.removeAllRanges();
+						const range = activeDocument.createRange();
+						range.selectNode(tableEl);
+						activeWindow.getSelection()?.addRange(range);
+						activeDocument.execCommand('copy');
+						activeWindow.getSelection()?.removeAllRanges();
+					});
+				});
 
-			menu.addItem((item) => {
-				item.setTitle('Create 2x2 table');
-				item.onClick(async () => {
-					await this.tableEditor.parseActiveFile();
-					await this.tableEditor.createMinimalNewTable();
+				menu.addItem((item) => {
+					item.setTitle('Delete entire table');
+					item.onClick(async () => {
+						if (!this.hoverTableId)
+							return;
+						await this.tableEditor.parseActiveFile();
+						await this.tableEditor?.deleteEntireTable(this.hoverTableId);
+					})
 				})
-			});
-
-			if (!this.hoverCell || !this.hoverTableId)
-				return;
-
-			// 点选 menu 中的选项时，很可能会移出 cell，因此这里将触发时所在 cell 的 rowIndex 和 colIndex，还有 hoverTableId 先记录下来
-			const hoverCellRowIndex = this.hoverCell.rowIndex;
-			const hoverCellColIndex = this.hoverCell.colIndex;
-			const hoverTableId = this.hoverTableId;
-
-			menu
-			  .addItem((item) => {
-				item.setTitle('Delete row');
-				item.onClick(async () => {
-					if (hoverCellRowIndex == 0) {
-						new Notice('You can\'t delete header of a table.');
-						return;
-					}
-					await this.tableEditor.parseActiveFile();
-					await this.tableEditor.deleteRow(hoverTableId, hoverCellRowIndex);
-				})
-			}).addItem((item) => {
-				item.setTitle('Delete column');
-				item.onClick(async () => {
-					await this.tableEditor.parseActiveFile();
-					await this.tableEditor.deleteCol(hoverTableId, hoverCellColIndex);
-				})
-			}).addItem((item) => {
-				item.setTitle('Insert row below');
-				item.onClick(async () => {
-					await this.tableEditor.parseActiveFile();
-					await this.tableEditor.insertRowBelow(hoverTableId, hoverCellRowIndex);
-				})
-			}).addItem((item) => {
-				item.setTitle('Insert column right (left aligned)');
-				item.onClick(async () => {
-					await this.tableEditor.parseActiveFile();
-					await this.tableEditor.insertColRight(hoverTableId, hoverCellColIndex);
-				})
-			});
+			}
 		}));
 	}
 

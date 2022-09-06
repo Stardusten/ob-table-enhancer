@@ -2,6 +2,7 @@ import {App, debounce, Notice} from "obsidian";
 import {TableEditor} from "./table-editor";
 import {Cell} from "./table";
 import MyPlugin from "../main";
+import {inReadingView} from "./editor-utils";
 
 export const insertBelowIcon = `
 <svg
@@ -159,21 +160,42 @@ export const moveLeftIcon = `
 
 export const widerIcon = `
 <svg
-	t="1662327912317"
-	class="icon"
-	viewBox="0 0 1024 1024"
-	version="1.1"
-	xmlns="http://www.w3.org/2000/svg"
-	p-id="1497"
-	width="16"
-	height="16"
->
-	<path
-		d="M400.1 550.2c20.6 0 37.3-16.7 37.3-37.3s-16.7-37.3-37.3-37.3H191.6l85.6-85.6c14.6-14.6 14.6-38.2 0-52.8-14.6-14.6-38.2-14.6-52.8 0L75.1 486.5c-7 7-10.9 16.5-10.9 26.4 0 9.9 3.9 19.4 10.9 26.4l149.3 149.3c14.6 14.6 38.2 14.6 52.8 0 14.6-14.6 14.6-38.2 0-52.8l-85.6-85.6h208.5z m224-74.7c-20.6 0-37.3 16.7-37.3 37.3s16.7 37.3 37.3 37.3h208.6l-85.6 85.6c-14.6 14.6-14.6 38.2 0 52.8 14.6 14.6 38.2 14.6 52.8 0l149.3-149.3c7-7 10.9-16.5 10.9-26.4 0-9.9-3.9-19.4-10.9-26.4L799.9 337.1c-14.6-14.6-38.2-14.6-52.8 0-14.6 14.6-14.6 38.2 0 52.8l85.6 85.6H624.1z"
-		p-id="1498"
-		fill="currentColor"
-    	stroke="currentColor"
-	></path>
+   width="15.999999"
+   height="15.999999"
+   viewBox="0 0 4.233333 4.233333"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2" />
+  <g
+     id="layer1">
+    <path
+       id="path240-5-3"
+       fill="currentColor"
+	   stroke="currentColor"
+       style="stroke-width:0.15531;stroke-linecap:round;stroke-dasharray:none"
+       d="M 2.7169851,2.8149426 3.3554478,2.1166667 M 2.7169851,1.4183908 3.3554478,2.1166667 M 1.5163481,2.8149426 0.8778855,2.1166667 M 1.5163481,1.4183908 0.8778855,2.1166667" />
+  </g>
+</svg>`;
+
+export const narrowerIcon = `
+<svg
+   width="15.999999"
+   height="15.999999"
+   viewBox="0 0 4.233333 4.233333"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2" />
+  <g
+     id="layer1">
+    <path
+       id="path240-5-3"
+       fill="currentColor"
+	   stroke="currentColor"
+       style="stroke-width:0.15531;stroke-linecap:round;stroke-dasharray:none"
+       d="M 3.2871706,2.8149426 2.6487079,2.1166667 M 3.2871706,1.4183908 2.6487079,2.1166667 M 0.94616277,2.8149426 1.5846254,2.1166667 M 0.94616277,1.4183908 1.5846254,2.1166667" />
+  </g>
 </svg>`;
 
 export class ToolBar {
@@ -187,8 +209,10 @@ export class ToolBar {
 	hideTimeout: any;
 	/** 哪个 cell 触发的 toolbar */
 	fromCell: Cell;
+	plugin: MyPlugin;
 
 	constructor(plugin: MyPlugin) {
+		this.plugin = plugin;
 		this.tableEditor = plugin.tableEditor;
 		this.activeOpBars = [];
 
@@ -292,6 +316,26 @@ export class ToolBar {
 				await this.tableEditor.setColAligned(this.fromCell.tableId, this.fromCell.colIndex, 'right');
 			}
 		});
+		// this.colOpBarEl.createDiv({
+		// 	cls: 'ob-table-enhancer-col-bar-button'
+		// }, (el) => {
+		// 	el.innerHTML = narrowerIcon;
+		// 	el.onclick = async () => {
+		// 		// 先 parse
+		// 		await this.tableEditor.parseActiveFile();
+		// 		await this.tableEditor.changeColWidth(this.fromCell.tableId, this.fromCell.colIndex, -1);
+		// 	}
+		// });
+		// this.colOpBarEl.createDiv({
+		// 	cls: 'ob-table-enhancer-col-bar-button'
+		// }, (el) => {
+		// 	el.innerHTML = widerIcon;
+		// 	el.onclick = async () => {
+		// 		// 先 parse
+		// 		await this.tableEditor.parseActiveFile();
+		// 		await this.tableEditor.changeColWidth(this.fromCell.tableId, this.fromCell.colIndex, 1);
+		// 	}
+		// });
 
 		// 滚动时不显示
 		plugin.registerDomEvent(activeDocument, 'scroll', (e) => {
@@ -311,6 +355,8 @@ export class ToolBar {
 	 * @param cell
 	 */
 	tryShowFor(cell: Cell) {
+		if (inReadingView())
+			return;
 		// 清除隐藏计时
 		if (this.hideTimeout)
 			clearTimeout(this.hideTimeout);
