@@ -115,7 +115,10 @@ export class TableEditor {
 					else break;
 				}
 				table.toRowIndex = i;
-				this.tables.set(TableEditor.getIdentifier(table), table);
+				const tableId = TableEditor.getIdentifier(table);
+				if (this.tables.get(tableId))
+					continue;
+				this.tables.set(tableId, table);
 			}
 		}
 		// 如果存在不标准的表格，则将标准化后的写回文件
@@ -399,6 +402,10 @@ export class TableEditor {
 			const text = '| Col 1 | Col 2 |\n|---|---|\n| xxxx | xxxx |\n';
 			insertLineBelowWithText(editor, rowIndex, text);
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
+			const firstCell = activeDocument.querySelector('#Ⲝ00');
+			if (firstCell instanceof HTMLTableCellElement) {
+				firstCell.click();
+			}
 		}
 	}
 
@@ -455,32 +462,33 @@ export class TableEditor {
 	private static getIdentifier(table: Table) {
 		const result = [];
 		const rowNum = table.cells.length;
+		// 保留 \u3000 不筛去
 		for (let i = 0; i < rowNum; i ++) {
 			const str = table.cells[i][0];
 			// console.log('' + str);
 			// 不考虑空 cell 和含 md 标记的 cell
-			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/))
-				result.push(str.trim());
+			if (str && !str.match(/[!<>*#\[\]`$=]/))
+				result.push(str.replace(/[\r\n\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\ufeff]/g, ''));
 		}
 		let i = table.cells[0].length;
 		while (i --) {
 			const str = table.cells[0][i];
 			// console.log('' + str);
 			// 不考虑空 cell 和含 md 标记的 cell
-			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$=]/))
-				result.push(str.trim());
+			if (str && !str.match(/[!<>*#\[\]`$=]/))
+				result.push(str.replace(/[\r\n\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\ufeff]/g, ''));
 		}
-		let resultStr = result.join('').replace(/\s/g, '');
+		let resultStr = result.join('');
 		if (resultStr.length == 0)
 			return '空表';
 		// 添加行列数
 		resultStr += table.cells.length.toString();
 		resultStr += table.cells[0].length.toString();
-		// console.log(resultStr);
+		console.log(resultStr);
 		return String.fromCharCode(hashCode(resultStr));
 	}
 
-	private static rowCells2rowString(cells: string[]) {
+	static rowCells2rowString(cells: string[]) {
 		const result = ['|'];
 		for (const cell of cells) {
 			// 至少留两个空格，防止产生非法表头

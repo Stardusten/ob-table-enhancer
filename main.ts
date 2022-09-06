@@ -4,7 +4,7 @@ import {Cell} from "./src/table";
 import {getCaretPosition, setCaretPosition} from "./src/html-utils";
 import {getRowNum, isSameCell} from "./src/table-utils";
 import {text} from "stream/consumers";
-import {hashCode, inReadingView} from "./src/editor-utils";
+import {deleteLine, hashCode, inReadingView} from "./src/editor-utils";
 import {ReferenceSuggestionPopper} from "./src/reference-suggest";
 import {ToolBar} from "./src/tool-bar";
 import {ObTableEnhancerSettingTab} from "./src/setting-tab";
@@ -406,7 +406,7 @@ export default class MyPlugin extends Plugin {
 		this.addCommand({
 			id: 'insert2x2table',
 			name: 'Insert 2x2 table',
-			callback: async () => {
+			editorCallback: async (editor, view) => {
 				await this.tableEditor.parseActiveFile();
 				await this.tableEditor.createMinimalNewTable();
 			}
@@ -429,15 +429,43 @@ export default class MyPlugin extends Plugin {
 					});
 				});
 
-				menu.addItem((item) => {
+				menu.addItem(async (item) => {
+					item.setTitle('Copy as Markdown');
+					item.onClick(async (e) => {
+						if (!this.hoverTableId)
+							return;
+						await this.tableEditor.parseActiveFile();
+						const table = this.tableEditor.tables.get(this.hoverTableId);
+						if (!table)
+							return;
+						const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+						if (markdownView instanceof MarkdownView) {
+							const editor = markdownView.editor;
+							const tableMd = [];
+							// 单独处理表头
+							// 在第一个表头后面加个 /u3000，保证粘贴后与原表格索引不同
+							let firstRowCells = table.cells[0];
+							firstRowCells = firstRowCells.map(s => `${s}　`);
+							const firstRow = TableEditor.rowCells2rowString(firstRowCells);
+							tableMd.push(firstRow);
+							for (let i = table.fromRowIndex + 1; i < table.toRowIndex; i++)
+								tableMd.push(editor.getLine(i));
+							await navigator.clipboard.writeText(tableMd.join('\n'));
+						}
+					})
+				});
+
+				menu.addItem(async (item) => {
 					item.setTitle('Delete entire table');
 					item.onClick(async () => {
 						if (!this.hoverTableId)
 							return;
+						if (this.editingCell) // XXX
+							await this.doneEdit(this.editingCell);
 						await this.tableEditor.parseActiveFile();
 						await this.tableEditor?.deleteEntireTable(this.hoverTableId);
 					})
-				})
+				});
 			}
 		}));
 	}
@@ -468,6 +496,13 @@ export default class MyPlugin extends Plugin {
 			cellElem.innerText.trim(),
 		);
 
+		// 编辑器失焦，防止聚焦到光标处
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView instanceof MarkdownView) {
+			const editor = markdownView.editor;
+			editor.blur();
+		}
+
 		// parse
 		await this.tableEditor.parseActiveFile();
 
@@ -478,13 +513,6 @@ export default class MyPlugin extends Plugin {
 		if (this.suggestPopper)
 			this.suggestPopper.disable();
 
-		// 编辑器失焦，防止聚焦到光标处
-		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (markdownView instanceof MarkdownView) {
-			const editor = markdownView.editor;
-			editor.blur();
-		}
-
 		// 清空 editingCell
 		this.editingCell = null;
 	}
@@ -493,13 +521,14 @@ export default class MyPlugin extends Plugin {
 	getIdentifier(table: HTMLTableElement) {
 		const result = [];
 		const rowNum = table.rows.length;
+		// 保留 \u3000 不筛去
 		for (let i = 0; i < rowNum; i ++) {
 			const str = table.rows[i].cells[0].innerHTML
 				.replace(/&nbsp;/gi,'');
 			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
-			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$&=]/)) {
-				result.push(str.trim());
+			if (str != '' && !str.match(/[!<>*#\[\]`$&=]/)) {
+				result.push(str.replace(/[\r\n\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\ufeff]/g, ''));
 			}
 		}
 		let i = table.rows[0].cells.length;
@@ -507,18 +536,18 @@ export default class MyPlugin extends Plugin {
 			const str = table.rows[0].cells[i].innerHTML.replace(/&nbsp;/gi,'');
 			// console.log(table.rows[0].cells[i], '' + str);
 			// 不考虑空 cell 和含 ! 的 cell（因为可能是图片）和 <、> 的 cell（因为可能是 html 标签）
-			if (str && str.trim() != '' && !str.match(/[!<>*#\[\]`$&=]/))
-				result.push(str.trim());
+			if (str && !str.match(/[!<>*#\[\]`$&=]/))
+				result.push(str.replace(/[\r\n\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\ufeff]/g, ''));
 		}
-		// 筛去 md 标记符号
-		let resultStr = result.join('').replace(/\s/g, '');
+		// 保留 \u3000 不筛去
+		let resultStr = result.join('');
 		// console.log(resultStr);
 		if (resultStr.length == 0)
 			return '空表';
 		// 添加行列数
 		resultStr += table.rows.length.toString();
 		resultStr += table.rows[0].cells.length.toString();
-		// console.log(resultStr);
+		console.log(resultStr);
 		// console.log(table);
 		return String.fromCharCode(hashCode(resultStr));
 	}
