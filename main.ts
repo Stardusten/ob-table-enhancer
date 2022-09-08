@@ -547,7 +547,7 @@ export default class MyPlugin extends Plugin {
 		// 添加行列数
 		resultStr += table.rows.length.toString();
 		resultStr += table.rows[0].cells.length.toString();
-		console.log(resultStr);
+		// console.log(resultStr);
 		// console.log(table);
 		return String.fromCharCode(hashCode(resultStr));
 	}
