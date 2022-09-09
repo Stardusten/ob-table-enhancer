@@ -1,6 +1,6 @@
 import {App, MarkdownView, prepareFuzzySearch, SearchMatches, SearchResult, TFile} from "obsidian";
 import {getCaretPosition, getCaretRect, setCaretPosition} from "./html-utils";
-import MyPlugin from "../main";
+import TableEnhancer from "../main";
 
 export interface FuzzySuggestion {
 	/** 补全窗口里显示的内容 */
@@ -17,7 +17,7 @@ export interface FuzzySuggestion {
 export abstract class SuggestionPopper<T> {
 
 	protected app: App;
-	protected plugin: MyPlugin;
+	protected plugin: TableEnhancer;
 	/** 为哪个元素提供补全 */
 	protected outerEl: HTMLElement;
 	// <suggestion-container>
@@ -33,7 +33,7 @@ export abstract class SuggestionPopper<T> {
 	/** 补全是否触发 */
 	isTriggered: boolean;
 
-	constructor(plugin: MyPlugin) {
+	constructor(plugin: TableEnhancer) {
 		this.plugin = plugin;
 		this.app = plugin.app;
 		// 补全窗口直接插入到 <body</body>

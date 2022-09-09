@@ -8,7 +8,7 @@ import {
 	insertLineBelowWithText, replaceRangeWithoutScroll,
 	setLineWithoutScroll
 } from "./editor-utils";
-import MyPlugin from "../main";
+import TableEnhancer from "../main";
 
 export class TableEditor {
 
@@ -19,7 +19,7 @@ export class TableEditor {
 	/** 标记，记录与文件不一致时为 true */
 	isDirty: boolean;
 
-	constructor(plugin: MyPlugin) {
+	constructor(plugin: TableEnhancer) {
 		this.app = plugin.app;
 		this.isDirty = true;
 		this.app.vault.on('modify', (modifiedFile) => {

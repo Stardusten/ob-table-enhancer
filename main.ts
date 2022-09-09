@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS: ObTableEnhancerSettings = {
 	enableFloatingToolBar: false,
 }
 
-export default class MyPlugin extends Plugin {
+export default class TableEnhancer extends Plugin {
 
 	settings: ObTableEnhancerSettings;
 	tableEditor: TableEditor;
@@ -51,19 +51,6 @@ export default class MyPlugin extends Plugin {
 
 			if (this.settings.enableFloatingToolBar)
 				this.toolBar = new ToolBar(this);
-
-			// 劫持滚动事件
-			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			if (markdownView instanceof MarkdownView) {
-				const cm = (markdownView.editor as any).cm;
-				this.registerDomEvent(cm.scrollDOM, 'scroll', (e: Event) => {
-					// 如果当前正在编辑表格，则屏蔽默认滚动事件
-					// if (this.hoverTableId) {
-						e.preventDefault();
-						e.stopImmediatePropagation();
-					// }
-				}, true);
-			}
 
 			this.registerDomEvent(activeDocument, 'keydown', async (e) => {
 
@@ -290,13 +277,14 @@ export default class MyPlugin extends Plugin {
 				// 添加 id
 				table.setAttr('id', tableId);
 				// 监听当前 hover 的 table
-				table.onmouseenter = (e) => {
+				table.addEventListener('mouseenter', () => {
 					this.hoverTableId = tableId;
-					// 为
-				}
+				});
 				// 点击表格不再转换为源码编辑模式
 				// 仍可以从左上角按钮转换到源码编辑模式
-				table.onclick = (e) => e.preventDefault();
+				table.addEventListener('click', (e) => {
+					e.stopPropagation();
+				});
 
 				// 为表格 cell 添加行索引、列索引属性
 				for (let j = 0; j < table.rows.length; j++) {
@@ -323,7 +311,7 @@ export default class MyPlugin extends Plugin {
 							} catch (err) { console.error(err); }
 						}
 						// 监听当前 hover 的 cell
-						cellEl.onmouseenter = (e) => {
+						cellEl.addEventListener('mouseenter', (e) => {
 							this.hoverCell = {
 								tableId,
 								rowIndex: j,
@@ -331,13 +319,18 @@ export default class MyPlugin extends Plugin {
 								cellEl
 							};
 							this.toolBar?.tryShowFor(this.hoverCell);
-						}
-						cellEl.onmouseout = (e) => {
+						});
+						cellEl.addEventListener('mouseout', (e) => {
 							this.hoverCell = null;
 							this.toolBar?.tryHide(200);
-						}
+						});
 						// 为每个 cell 注册点击事件
-						cellEl.onclick = async (e) => {
+						cellEl.addEventListener('click', async (e) => {
+
+							// 如果是点击子元素触发的事件，比如点击链接，则不响应
+							if (e.targetNode != cellEl)
+								return;
+
 							e.preventDefault();
 							e.stopPropagation();
 
@@ -397,7 +390,7 @@ export default class MyPlugin extends Plugin {
 
 							// 绑定补全
 							this.suggestPopper?.bindOuterEl(cellEl);
-						}
+						});
 					}
 				}
 			});
@@ -559,8 +552,11 @@ export default class MyPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		// update
-		if (!this.settings.enableFloatingToolBar)
+		if (!this.settings.enableFloatingToolBar) {
+			this.toolBar?.onUnload();
 			this.toolBar = null;
-		else this.toolBar = new ToolBar(this);
+		} else {
+			this.toolBar = new ToolBar(this);
+		}
 	}
 }

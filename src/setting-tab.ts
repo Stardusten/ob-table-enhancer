@@ -1,10 +1,10 @@
 import {App, PluginSettingTab, Setting} from "obsidian";
-import MyPlugin from "../main";
+import TableEnhancer from "../main";
 
 export class ObTableEnhancerSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: TableEnhancer;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: TableEnhancer) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

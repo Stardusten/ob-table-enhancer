@@ -1,7 +1,7 @@
 import {App, debounce, Notice} from "obsidian";
 import {TableEditor} from "./table-editor";
 import {Cell} from "./table";
-import MyPlugin from "../main";
+import TableEnhancer from "../main";
 import {inReadingView} from "./editor-utils";
 
 export const insertBelowIcon = `
@@ -209,9 +209,9 @@ export class ToolBar {
 	hideTimeout: any;
 	/** 哪个 cell 触发的 toolbar */
 	fromCell: Cell;
-	plugin: MyPlugin;
+	plugin: TableEnhancer;
 
-	constructor(plugin: MyPlugin) {
+	constructor(plugin: TableEnhancer) {
 		this.plugin = plugin;
 		this.tableEditor = plugin.tableEditor;
 		this.activeOpBars = [];
