@@ -9,6 +9,7 @@ import {ReferenceSuggestionPopper} from "./src/reference-suggest";
 import {ToolBar} from "./src/tool-bar";
 import {ObTableEnhancerSettingTab} from "./src/setting-tab";
 import {Arr} from "tern";
+import {EditorView} from "@codemirror/view";
 
 // Remember to rename these classes and interfaces!
 
@@ -478,23 +479,35 @@ export default class TableEnhancer extends Plugin {
 		if (!this.hoverTableId)
 			return;
 
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!(markdownView instanceof MarkdownView))
+			return;
+
+		// 编辑器失焦，防止聚焦到光标处
+		const editor = markdownView.editor;
+		editor.blur();
+
 		// 停止编辑
 		cellElem.setAttr('contenteditable', false);
 
-		// 提交更改
+		const cm = (editor as any).cm as EditorView;
+		const scrollDom = cm.scrollDOM;
+		const x = scrollDom.scrollLeft
+		const y = scrollDom.scrollTop;
+		const resetScroll = () => {
+			scrollDom.scrollTo(x, y);
+		}
+		scrollDom.addEventListener('scroll', resetScroll, true);
+
+		// 提交更改 ---------------------------------------------------------------- disable scroll here
 		await this.tableEditor.update(
 			this.hoverTableId,
 			rowIndex,
 			colIndex,
 			cellElem.innerText.trim(),
-		);
+		); //---------------------------------------------------------------------- enable scroll here
 
-		// 编辑器失焦，防止聚焦到光标处
-		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (markdownView instanceof MarkdownView) {
-			const editor = markdownView.editor;
-			editor.blur();
-		}
+		scrollDom.removeEventListener('scroll', resetScroll, true);
 
 		// parse
 		await this.tableEditor.parseActiveFile();

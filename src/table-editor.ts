@@ -227,7 +227,7 @@ export class TableEditor {
 			// 防止没有对文本做修改，导致不触发重新渲染
 			if (editor.getLine(rowLineNumber).length == newLine.length)
 				setLineWithoutScroll(editor, rowLineNumber, newLine + ' ');
-			setLineWithoutScroll(editor, rowLineNumber, newLine);
+			else setLineWithoutScroll(editor, rowLineNumber, newLine);
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}
@@ -254,7 +254,7 @@ export class TableEditor {
 			// 防止没有对文本做修改，导致不触发重新渲染
 			if (editor.getLine(rowLineNumber).length == newLine.length)
 				setLineWithoutScroll(editor, rowLineNumber, newLine + ' ');
-			setLineWithoutScroll(editor, rowLineNumber, newLine);
+			else setLineWithoutScroll(editor, rowLineNumber, newLine);
 			await markdownView.save(); // 写到文件里，防止 parse 的时候读到错误的内容
 		}
 	}
