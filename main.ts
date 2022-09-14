@@ -483,19 +483,18 @@ export default class TableEnhancer extends Plugin {
 		if (!(markdownView instanceof MarkdownView))
 			return;
 
-		// 编辑器失焦，防止聚焦到光标处
-		const editor = markdownView.editor;
-		editor.blur();
-
 		// 停止编辑
 		cellElem.setAttr('contenteditable', false);
 
+		const editor = markdownView.editor;
 		const cm = (editor as any).cm as EditorView;
 		const scrollDom = cm.scrollDOM;
 		const x = scrollDom.scrollLeft
 		const y = scrollDom.scrollTop;
 		const resetScroll = () => {
 			scrollDom.scrollTo(x, y);
+			// 编辑器失焦，防止聚焦到光标处
+			editor.blur();
 		}
 		scrollDom.addEventListener('scroll', resetScroll, true);
 
@@ -508,6 +507,9 @@ export default class TableEnhancer extends Plugin {
 		); //---------------------------------------------------------------------- enable scroll here
 
 		scrollDom.removeEventListener('scroll', resetScroll, true);
+
+		// 编辑器失焦，防止聚焦到光标处
+		editor.blur();
 
 		// parse
 		await this.tableEditor.parseActiveFile();
