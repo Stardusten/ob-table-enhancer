@@ -15,7 +15,6 @@ export const getTableEditorExt = (plugin: TableEnhancer2) => ViewPlugin.fromClas
 		tableEls.forEach((tableEl) => {
 			if (tableEl.hasClass('intercepted')) // TODO 每次都 query 存在性能问题
 				return;
-			// console.log('intercept table...');
 			tableEl.addClass('intercepted');
 			const tablePos = update.view.posAtDOM(tableEl);
 			const tableLine = update.state.doc.lineAt(tablePos).number - 1;
@@ -70,7 +69,6 @@ export const getTableEditorExt = (plugin: TableEnhancer2) => ViewPlugin.fromClas
 						const text = getCell(table, i, j);
 						if (text == null)
 							return;
-						// console.log('text in cell:', text);
 						// 聚焦
 						cellEl.focus();
 						// 添加编辑 class
@@ -84,7 +82,7 @@ export const getTableEditorExt = (plugin: TableEnhancer2) => ViewPlugin.fromClas
 							cellEl.innerText = text!;
 							setCaretPosition(cellEl, text!.length);
 						}
-					})
+					});
 				}
 			}
 		})

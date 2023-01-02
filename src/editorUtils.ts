@@ -1,6 +1,7 @@
 import {Editor, EditorPosition} from "obsidian";
 import {privateDecrypt} from "crypto";
 import {TransactionSpec} from "@codemirror/state";
+import {EditorView} from "@codemirror/view";
 
 export const getLineStartPos = (line: number): EditorPosition => ({
 	line,
@@ -106,4 +107,18 @@ export const setLineWithoutScroll = (editor: Editor, n: number, text: string) =>
 		scrollIntoView: false, // 不滚动！！
 		sequential: false, // 防止位置错乱
 	} as TransactionSpec;
+}
+
+export function withoutScrollAndFocus(editorView: EditorView, callback: () => any) {
+	const scrollDom = editorView.scrollDOM;
+	const x = scrollDom.scrollLeft
+	const y = scrollDom.scrollTop;
+	const resetScroll = () => {
+		scrollDom.scrollTo(x, y);
+	}
+	scrollDom.addEventListener('scroll', resetScroll, true);
+	editorView.contentDOM.blur();
+	callback();
+	editorView.contentDOM.blur();
+	scrollDom.removeEventListener('scroll', resetScroll, true);
 }

@@ -6,10 +6,11 @@ import {
 	insertLineBelow,
 	insertLineBelowWithText,
 	replaceRangeWithoutScroll,
-	setLineWithoutScroll
+	setLineWithoutScroll, withoutScrollAndFocus
 } from "./editorUtils";
 import TableEnhancer2 from "../main";
 import {EditorView} from "@codemirror/view";
+import { TransactionSpec } from "@codemirror/state";
 
 export class TableEditor {
 
@@ -106,12 +107,12 @@ export class TableEditor {
 	}
 
 	/**
-	* 更新表格中某个 cell 的内容
-	* @param table
-	* @param i 哪一行
-	* @param j 哪一列
-	* @param newContent 新的内容
-	*/
+	 * 更新表格中某个 cell 的内容，会对比之前的内容，如果不变，则什么也不做
+	 * @param table
+	 * @param i 哪一行
+	 * @param j 哪一列
+	 * @param newContent 新的内容
+	 */
 	async updateCell(table: Table, i: number, j: number, newContent: string) {
 		if (!table) return;
 		const markdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -121,10 +122,15 @@ export class TableEditor {
 			console.error('Cannot get editor');
 			return;
 		}
+		// 没有改变，不用更新
+		if (newContent == table.cells[i][j])
+			return;
 		table.cells[i][j] = newContent; // update cell
 		const rowLineNumber = TableEditor.getLineNumber(table, i);
 		const newLine = TableEditor.rowCells2rowString(table.cells[i]);
-		editorView.dispatch(setLineWithoutScroll(editor, rowLineNumber, newLine));
+		withoutScrollAndFocus(editorView, () => {
+			editorView.dispatch(setLineWithoutScroll(editor, rowLineNumber, newLine));
+		});
 	}
 
 	// /**
@@ -226,7 +232,7 @@ export class TableEditor {
 			const newCell = col ? col[idx] : '   ';
 			row.splice(colIndex + 1, 0, newCell);
 		});
-		const transactionSpecs = [];
+		const transactionSpecs: TransactionSpec[] = [];
 		// 修改格式控制行
 		transactionSpecs.push(
 			setLineWithoutScroll(editor, table.fromLine + 1, TableEditor.rowCells2rowString(table.formatLine)));
@@ -236,7 +242,9 @@ export class TableEditor {
 			transactionSpecs.push(
 				setLineWithoutScroll(editor, lineNumber, TableEditor.rowCells2rowString(table.cells[i])));
 		}
-		editorView.dispatch(...transactionSpecs);
+		withoutScrollAndFocus(editorView, () => {
+			editorView.dispatch(...transactionSpecs);
+		});
 	}
 
 	/**
@@ -262,8 +270,10 @@ export class TableEditor {
 			}
 		}
 		const rowLineNumber = TableEditor.getLineNumber(table, rowIndex);
-		editorView.dispatch(insertLineBelow(editor, rowLineNumber));
-		editorView.dispatch(setLineWithoutScroll(editor, rowLineNumber + 1, TableEditor.rowCells2rowString(row)));
+		withoutScrollAndFocus(editorView, () => {
+			editorView.dispatch(insertLineBelow(editor, rowLineNumber));
+			editorView.dispatch(setLineWithoutScroll(editor, rowLineNumber + 1, TableEditor.rowCells2rowString(row as string[])));
+		});
 	}
 
 	/**
@@ -283,7 +293,9 @@ export class TableEditor {
 			: aligned == 'right'
 				? '----:'
 				: ':---:';
-		editorView.dispatch(setLineWithoutScroll(editor, table.fromLine + 1, TableEditor.rowCells2rowString(table.formatLine)));
+		withoutScrollAndFocus(editorView, () => {
+			editorView.dispatch(setLineWithoutScroll(editor, table.fromLine + 1, TableEditor.rowCells2rowString(table.formatLine)));
+		});
 	}
 
 	/**
@@ -306,7 +318,7 @@ export class TableEditor {
 			console.error('Move out of range');
 			return;
 		}
-		const transactionSpecs = [];
+		const transactionSpecs: TransactionSpec[] = [];
 		// 先处理格式控制行
 		[ table.formatLine[colIndex1], table.formatLine[colIndex2] ]
 			= [ table.formatLine[colIndex2], table.formatLine[colIndex1]];
@@ -319,7 +331,9 @@ export class TableEditor {
 			transactionSpecs.push(
 				setLineWithoutScroll(editor, lineNumber, TableEditor.rowCells2rowString(table.cells[i])));
 		}
-		editorView.dispatch(...transactionSpecs);
+		withoutScrollAndFocus(editorView, () => {
+			editorView.dispatch(...transactionSpecs);
+		});
 	}
 
 	/**
@@ -342,7 +356,7 @@ export class TableEditor {
 			console.error('Move out of range');
 			return;
 		}
-		const transactionSpecs = [];
+		const transactionSpecs: TransactionSpec[] = [];
 		[ table.cells[rowIndex1], table.cells[rowIndex2] ]
 			= [ table.cells[rowIndex2], table.cells[rowIndex1] ];
 		const lineNumber1 = TableEditor.getLineNumber(table, rowIndex1);
@@ -353,7 +367,9 @@ export class TableEditor {
 		const row2String = TableEditor.rowCells2rowString(table.cells[rowIndex2]);
 		transactionSpecs.push(
 			setLineWithoutScroll(editor, lineNumber2, row2String));
-		editorView.dispatch(...transactionSpecs);
+		withoutScrollAndFocus(editorView, () => {
+			editorView.dispatch(...transactionSpecs);
+		});
 	}
 
 	// /**
@@ -394,7 +410,9 @@ export class TableEditor {
 			return;
 		}
 		const rowLineNumber = TableEditor.getLineNumber(table, rowIndex);
-		editorView.dispatch(deleteLine(editor, rowLineNumber));
+		withoutScrollAndFocus(editorView, () => {
+			editorView.dispatch(deleteLine(editor, rowLineNumber));
+		});
 	}
 
 	/**
@@ -419,7 +437,7 @@ export class TableEditor {
 		if (table.formatLine.length == 1) {
 			editorView.dispatch(deleteLines(editor, table.fromLine, table.toLine));
 		} else {
-			const transactionSpecs = [];
+			const transactionSpecs: TransactionSpec[] = [];
 			transactionSpecs.push(
 				setLineWithoutScroll(editor, table.fromLine + 1, TableEditor.rowCells2rowString(table.formatLine)));
 			for (let i = 0; i < table.cells.length; i++) {
@@ -427,7 +445,9 @@ export class TableEditor {
 				transactionSpecs.push(
 					setLineWithoutScroll(editor, lineNumber, TableEditor.rowCells2rowString(table.cells[i])));
 			}
-			editorView.dispatch(...transactionSpecs);
+			withoutScrollAndFocus(editorView, () => {
+				editorView.dispatch(...transactionSpecs);
+			});
 		}
 	}
 
