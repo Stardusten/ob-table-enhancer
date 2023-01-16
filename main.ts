@@ -35,7 +35,13 @@ export default class TableEnhancer2 extends Plugin {
 
 		// 按键逻辑
 		this.app.workspace.onLayoutReady(() => {
-			this.registerDomEvent(activeDocument, 'keydown', async (e) => {
+
+			// 注册到 contentEl 而不是 activeDocument，防止在设置面板等地触发
+			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (!markdownView)
+				return;
+
+			this.registerDomEvent(markdownView.contentEl, 'keydown', async (e) => {
 				const cellEl = activeDocument.querySelector('.' + editingCellClassName);
 				if (!(cellEl instanceof HTMLTableCellElement))
 					return;

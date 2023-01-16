@@ -13,6 +13,8 @@ export const getTableEditorExt = (plugin: TableEnhancer2) => ViewPlugin.fromClas
 		const dom = update.view.contentDOM;
 		const tableEls = dom.querySelectorAll('table');
 		tableEls.forEach((tableEl) => {
+			if (tableEl.hasClass('dataview'))
+				return;
 			if (tableEl.hasClass('intercepted')) // TODO 每次都 query 存在性能问题
 				return;
 			tableEl.addClass('intercepted');

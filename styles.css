@@ -4,7 +4,6 @@
 	position: absolute;
 	width: fit-content;
 	max-width: 3em;
-	z-index: 99;
 	flex-wrap: wrap;
 	transition: opacity 200ms ease-in-out;
 }

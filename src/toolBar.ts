@@ -62,7 +62,7 @@ export class ToolBar {
 					new Notice('Current column is already the bottom row.');
 					return;
 				}
-				await this.plugin.tableEditor.swapRows(table, this.cell.i,this.cell.i - 1);
+				await this.plugin.tableEditor.swapRows(table, this.cell.i,this.cell.i + 1);
 			}
 		});
 
@@ -216,6 +216,7 @@ export class ToolBar {
 		if (this.cell.j == 0) {
 			this.activeOpBars.push(this.rowOpBarEl);
 			this.rowOpBarEl.style.opacity = '1';
+			this.colOpBarEl.style.zIndex = '99';
 			const cellRect = cellEl.getBoundingClientRect();
 			const toolBarRect = this.rowOpBarEl.getBoundingClientRect();
 			this.rowOpBarEl.style.top = `${cellRect.top}px`;
@@ -226,6 +227,7 @@ export class ToolBar {
 		if (this.cell.i == 0) {
 			this.activeOpBars.push(this.colOpBarEl);
 			this.colOpBarEl.style.opacity = '1';
+			this.colOpBarEl.style.zIndex = '99';
 			const cellRect = cellEl.getBoundingClientRect();
 			const toolBarRect = this.colOpBarEl.getBoundingClientRect();
 			this.colOpBarEl.style.top = `${cellRect.top - toolBarRect.height}px`;
@@ -243,6 +245,8 @@ export class ToolBar {
 		this.hideTimeout = setTimeout(() => {
 			this.colOpBarEl.style.opacity = '0';
 			this.rowOpBarEl.style.opacity = '0';
+			this.colOpBarEl.style.zIndex = '-1';
+			this.rowOpBarEl.style.zIndex = '-1';
 			this.activeOpBars = [];
 		}, timeout);
 		const stopHideTimeout = (e: any) => {

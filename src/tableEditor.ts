@@ -61,14 +61,14 @@ export class TableEditor {
 				editor.setLine(tableLine + 1, formatLine);
 				notStandard = true;
 			}
-			const parsedFormatLine = formatLine.split('|').slice(1, -1);
+			const parsedFormatLine = formatLine.split(/(?<!\\)\|/).slice(1, -1);
 			// parse 表头
 			let headerLine = editor.getLine(tableLine);
 			if (notStandard) {
 				headerLine = `| ${headerLine} |`;
 				editor.setLine(tableLine, headerLine);
 			}
-			const parsedHeaderLine = headerLine.split('|').slice(1, -1);
+			const parsedHeaderLine = headerLine.split(/(?<!\\)\|/).slice(1, -1);
 			cells.push(parsedHeaderLine);
 			// parse 表格体
 			let i = tableLine + 1;
@@ -79,12 +79,12 @@ export class TableEditor {
 					if (notStandardRegex.exec(bodyLine)) {
 						bodyLine = `| ${bodyLine} |`;
 						editor.setLine(i, bodyLine);
-						const parsedBodyLine = bodyLine.split('|').slice(1, -1);
+						const parsedBodyLine = bodyLine.split(/(?<!\\)\|/).slice(1, -1);
 						cells.push(parsedBodyLine);
 					} else break;
 				} else {
 					if (bodyLine.trimStart().startsWith('|')) {
-						const parsedBodyLine = bodyLine.split('|').slice(1, -1);
+						const parsedBodyLine = bodyLine.split(/(?<!\\)\|/).slice(1, -1);
 						cells.push(parsedBodyLine);
 					} else break;
 				}
