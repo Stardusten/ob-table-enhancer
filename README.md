@@ -1,17 +1,16 @@
 # Obsidian Table Enhancer
 
-A plugin for improving the experience of using table in Obsidian.
+Manipulate markdown tables **_without touching the source code_** in Obsidian.
 
 ## TOC
 
+- [Quick Demo](#quick-demo)
 - [How to Install](#how-to-install)
 - [Key Features](#key-features)
-- [About running JS function in table cells](#about-running-js-function-in-table-cells)
-    - [Builtin Variables](#builtin-variables)
-    - [Builtin Functions](#builtin-functions)
-    - [Samples](#samples)
 
-*[点击这里](./README-zh_cn.md)查看中文文档。*
+## Quick Demo
+
+![table-enhancer-demo](https://user-images.githubusercontent.com/38722307/212839879-d5a86622-7f8a-433e-84f1-a78fa3c2735a.gif)
 
 ## How to Install
 
@@ -19,7 +18,11 @@ Please Refer: [How to install Obsidian Plugins](https://forum.obsidian.md/t/plug
 
 ## Key Features
 
-1. You can click a table cell to edit it directly, and the cell being edited will be highlighted. You can press `Enter` or `Esc` or click anywhere outside the table to exit the edit mode.
+1. You can open a *table generator* by clicking the `Create new table` command in a right-click menu, which allows you to swiftly create an empty table with the specified shape under current cursor.
+
+	![](https://user-images.githubusercontent.com/38722307/212823688-e3281939-1d03-48a2-b319-9aa86b9ec42e.gif)
+
+2. You can click a table cell to edit it directly, and the cell being edited will be highlighted. You can press `Enter` or `Esc` or click anywhere outside the table to exit the edit mode.
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252022775.gif)
 
@@ -38,42 +41,7 @@ Please Refer: [How to install Obsidian Plugins](https://forum.obsidian.md/t/plug
 6. Use `left` and `right` arrow keys to move between characters in the cell. And when your cursor is on the front of the table cell or the end of the table cell, you can use `left` and `right` arrow keys to move between cells.
 
    ![](https://raw.githubusercontent.com/Stardusten/Pic/master/img/202208252052416.gif)
+   
+ 7. Right-click on any table cell, and you will see a panel of buttons at the top of the pop-out menu. Try hovering your mouse over a button, and you will see a tooltip that tells you what the button does.
 
-7. In any table cell, you can double-click `[` to call the autocomplete function for files.
-
-    ![ob-plugin](https://user-images.githubusercontent.com/38722307/187054193-bb0e837c-8817-4cf3-9f49-cd231c1d8b71.gif)
-
-8. When mouse float on the table cell, a toolbar will be displayed on the top side of the cell. You can use the toolbar to insert a row or column before or after the current cell. And also center\left\right align the current cell.
-
-    ![ob-plugin](https://user-images.githubusercontent.com/38722307/188337779-8c205194-85d2-47ea-bd6d-79aee1812d93.gif)
-
-9. You can write JS function in table cell, and it will be executed when you exit the edit mode. The function will receive the table cell content as a parameter, and the return value will be used as the new content of the table cell.
-
-    ![ob-plugin](https://user-images.githubusercontent.com/38722307/188336844-a3bcf252-2552-4d42-99a2-bf2a45db6272.gif)
-
-## About running JS function in table cells
-
-### Builtin Variables
-
-You can access the content of table using following variables easily:
-
-- `c`: Get the current column (excluding the header and the cell itself), return a **character array**
-- `nc`: Get the current column (excluding the header and the cell itself), return a **number array**
-- `t`: Get the current table (see `console.log` for specific content)
-
-### Builtin Functions
-
-- `sum`: Sum of a number array
-- `avg`: Average of a number array
-- `min`: Minimum of a number array
-- `max`: Maximum of a number array
-
-### Samples
-
-| Code | Description |
-|--|--|
-| `>>> sum(nc)` | Sum of all numbers in the current column |
-| `>>> sum(nc.filter(e=>e>0))` | Sum of all positive numbers in the current column |
-| `>>> avg(nc)` | Average of the current column |
-| `>>> min(nc)` | Minimum of the current column |
-| `>>> c.filter(e=>e.contains('TODO')).length` | Sum of all cells in the current column contains TODO task |
+	![image](https://user-images.githubusercontent.com/38722307/212823667-3074341f-88ed-4a41-85c2-ec45e76319aa.gif)
