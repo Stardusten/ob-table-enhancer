@@ -212,12 +212,14 @@ export default class TableEnhancer2 extends Plugin {
 		});
 
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor) => {
-			if (this.settings.enableTableGenerator)
-				addTableGenerator(menu, this, editor);
 			// 找到是不是在某个 cell 上触发的菜单
 			const hoveredCell = activeDocument.querySelector('.' + hoveredCellClassName);
-			if (!(hoveredCell instanceof HTMLTableCellElement)) // 没有 hover 在 cell 上
+			if (!(hoveredCell instanceof HTMLTableCellElement)) {// 没有 hover 在 cell 上
+				// 则可以显示 table generator
+				if (this.settings.enableTableGenerator)
+					addTableGenerator(menu, this, editor);
 				return;
+			}
 			if (this.settings.enableButtonPanel)
 				addButtons(menu, this, hoveredCell);
 		}));
