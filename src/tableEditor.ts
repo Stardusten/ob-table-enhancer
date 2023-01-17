@@ -451,7 +451,7 @@ export class TableEditor {
 		}
 	}
 
-	async createEmptyTable(i: number, j: number) {
+	async createEmptyTable(i: number, j: number, fill?: boolean) {
 		if (j < 1 || i < 1) {
 			console.error('Cannot create an empty table');
 			return;

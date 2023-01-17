@@ -78,3 +78,8 @@ div.ob-table-enhancer.button-menu > button {
 	display: block;
 	text-align: center;
 }
+
+.table-height-adjust th, .table-height-adjust tr {
+	/** 防止单元格太窄不方便点击 */
+	height: 1.5em !important;
+}
