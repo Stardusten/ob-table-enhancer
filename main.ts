@@ -17,6 +17,8 @@ import {
 	getInsertRowBelowItem, getMoveColLeftItem, getMoveColRightItem, getMoveRowDownItem, getMoveRowUpItem
 } from "./src/menuItems";
 import {ToolBar} from "./src/toolBar";
+import {addButtons} from "./src/buttonPanel";
+import {addTableGenerator} from "./src/tableGenerator";
 
 export default class TableEnhancer2 extends Plugin {
 
@@ -197,24 +199,13 @@ export default class TableEnhancer2 extends Plugin {
 			});
 		});
 
-		this.registerEvent(this.app.workspace.on('editor-menu', (menu, view) => {
+		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor) => {
+			addTableGenerator(menu, this, editor);
 			// 找到是不是在某个 cell 上触发的菜单
 			const hoveredCell = activeDocument.querySelector('.' + hoveredCellClassName);
 			if (!(hoveredCell instanceof HTMLTableCellElement)) // 没有 hover 在 cell 上
 				return;
-			menu.addItem(getInsertRowBelowItem(this, hoveredCell));
-			menu.addItem(getInsertColRightItem(this, hoveredCell));
-			menu.addItem(getCloneRowItem(this, hoveredCell));
-			menu.addItem(getCloneColItem(this, hoveredCell));
-			menu.addItem(getDelRowItem(this, hoveredCell));
-			menu.addItem(getDelColItem(this, hoveredCell));
-			menu.addItem(getMoveColLeftItem(this, hoveredCell));
-			menu.addItem(getMoveColRightItem(this, hoveredCell));
-			menu.addItem(getMoveRowUpItem(this, hoveredCell));
-			menu.addItem(getMoveRowDownItem(this, hoveredCell));
-			menu.addItem(getColAlignItem(this, hoveredCell, 'left'));
-			menu.addItem(getColAlignItem(this, hoveredCell, 'right'));
-			menu.addItem(getColAlignItem(this, hoveredCell, 'center'));
+			addButtons(menu, this, hoveredCell);
 		}));
 	}
 

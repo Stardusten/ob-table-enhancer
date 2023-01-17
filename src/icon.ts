@@ -203,3 +203,47 @@ export const upwardIcon = `
 export const downIcon = `
 <svg t="1671934792670" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3163" width="16" height="16"><path d="M830.24 340.688l11.328 11.312a16 16 0 0 1 0 22.624L530.448 685.76a16 16 0 0 1-22.64 0L196.688 374.624a16 16 0 0 1 0-22.624l11.312-11.312a16 16 0 0 1 22.624 0l288.496 288.496 288.512-288.496a16 16 0 0 1 22.624 0z" fill="currentColor"
 	   stroke="currentColor" p-id="3164"></path></svg>`;
+
+export const insertColRight = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+    <path d="M6,5C5.448,5 5,5.448 5,6L5,18C5,18.552 5.448,19 6,19L12,19C12.552,19 13,18.552 13,18L13,6C13,5.448 12.552,5 12,5L6,5Z"/>
+    <path d="M19,19L19,5"/>
+</svg>`;
+
+export const insertRowBelow = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+    <path d="M19,6C19,5.448 18.552,5 18,5L6,5C5.448,5 5,5.448 5,6L5,12C5,12.552 5.448,13 6,13L18,13C18.552,13 19,12.552 19,12L19,6Z"/>
+    <path d="M5,19L19,19"/>
+</svg>`;
+
+export const cloneRow = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+    <path d="M19,6L5,6"/>
+    <path d="M7,19L5,19"/>
+    <path d="M13,19L11,19"/>
+    <path d="M19,19L17,19"/>
+    <path d="M12,14L15,11"/>
+    <path d="M12,14L9,11"/>
+</svg>`;
+
+export const cloneCol = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+    <path d="M6,5L6,19"/>
+    <path d="M19,17L19,19"/>
+    <path d="M19,11L19,13"/>
+    <path d="M19,5L19,7"/>
+    <path d="M14,12L11,9"/>
+    <path d="M14,12L11,15"/>
+</svg>`;
+
+export const delRow = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+    <path d="M17.75,5L4,5"/>
+    <path d="M17.75,19L4,19"/>
+    <path d="M12,12L4,12"/>
+    <path d="M15,14.5L20,9.5"/>
+    <path d="M20,14.5L15,9.5"/>
+</svg>`;
+
+export const delCol = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+    <path d="M5,6.25L5,20"/>
+    <path d="M19,6.25L19,20"/>
+    <path d="M12,12L12,20"/>
+    <path d="M14.5,9L9.5,4"/>
+    <path d="M14.5,4L9.5,9"/>
+</svg>`;

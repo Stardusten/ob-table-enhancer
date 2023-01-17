@@ -451,6 +451,31 @@ export class TableEditor {
 		}
 	}
 
+	async createEmptyTable(i: number, j: number) {
+		if (j < 1 || i < 1) {
+			console.error('Cannot create an empty table');
+			return;
+		}
+		const markdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+		const editor = markdownView?.editor;
+		const editorView = (editor as any)?.cm as EditorView;
+		if (!editor || !editorView) {
+			console.error('Cannot get editor');
+			return;
+		}
+		const cursor = editor.getCursor();
+		const cursorLine = editor.getLine(cursor.line);
+		const bodyString = '|' + '  |'.repeat(j);
+		const formatString = '|' + ':-:|'.repeat(j);
+		let tableArr = [
+			cursorLine, '\n',
+			bodyString, '\n',
+			formatString, '\n'
+		];
+		while (i--) tableArr.push(bodyString, '\n');
+		editor.setLine(cursor.line, tableArr.join(''));
+	}
+
 	static rowCells2rowString(cells: string[]) {
 		const result = ['|'];
 		try {
