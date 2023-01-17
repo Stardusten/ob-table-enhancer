@@ -7,7 +7,7 @@ export const addTableGenerator = (
 	editor: Editor
 ) => {
 	menu.addItem(menuItem => {
-		menuItem.setTitle('Crate new table');
+		menuItem.setTitle('Create new table');
 		menuItem.setIcon('table');
 		menuItem.onClick(async e => {
 			// 计算光标位置
@@ -35,7 +35,7 @@ class TableGenerator extends Menu {
 	constructor(plugin: TableEnhancer2) {
 		super();
 		this.plugin = plugin;
-		this.addItem(item => {}); // 添加一个空 item，防止不显示
+		this.addItem(item => item.setDisabled(true)); // 添加一个空 item，防止不显示
 	}
 
 	onload() {
