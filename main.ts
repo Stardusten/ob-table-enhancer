@@ -1,14 +1,13 @@
 import {Editor, MarkdownView, Plugin} from 'obsidian';
 import {
 	editingCellClassName,
-	getCaretPosition,
+	getCaretPosition, getCellText,
 	hoveredCellClassName,
-	parseCellId,
+	getCellInfo,
 	setCaretPosition
 } from "./src/global";
 import {TableEditor} from "./src/tableEditor";
 import {EditorView} from "@codemirror/view";
-import {getTableEditorExt} from "./src/ext";
 import {
 	getCloneColItem,
 	getCloneRowItem, getColAlignItem, getDelColItem,
@@ -20,6 +19,9 @@ import {ToolBar} from "./src/toolBar";
 import {addButtons} from "./src/buttonPanel";
 import {addTableGenerator} from "./src/tableGenerator";
 import {DEFAULT_SETTINGS, TableEnhancer2Settings, TableEnhancer2SettingTab} from "./src/settings";
+import {getTableHoverPostProcessor} from "./src/tableHoverPostProcessor";
+import {getClickHandler} from "./src/clickHandler";
+import {getKeydownHandler} from "./src/getKeydownHandler";
 
 export default class TableEnhancer2 extends Plugin {
 
@@ -33,6 +35,7 @@ export default class TableEnhancer2 extends Plugin {
 	public settings: TableEnhancer2Settings;
 
 	async onload() {
+
 		this.tableEditor = new TableEditor(this);
 
 		await this.loadSettings();
@@ -40,8 +43,8 @@ export default class TableEnhancer2 extends Plugin {
 		if (this.settings.enableFloatingToolbar)
 			this.toolBar = new ToolBar(this);
 
-		const tableEditorExt = getTableEditorExt(this);
-		this.registerEditorExtension(tableEditorExt);
+		const tableHoverPostProcessor = getTableHoverPostProcessor(this);
+		this.registerMarkdownPostProcessor(tableHoverPostProcessor);
 
 		// 按键逻辑
 		this.app.workspace.onLayoutReady(() => {
@@ -55,160 +58,13 @@ export default class TableEnhancer2 extends Plugin {
 			if (!markdownView)
 				return;
 
-			this.registerDomEvent(markdownView.contentEl, 'keydown', async (e) => {
-				const cellEl = activeDocument.querySelector('.' + editingCellClassName);
-				if (!(cellEl instanceof HTMLTableCellElement))
-					return;
+			// 注册单击事件处理器
+			const clickHandler = getClickHandler(this);
+			this.registerDomEvent(markdownView.contentEl, 'click', clickHandler);
 
-				// <shift-enter>
-				if (!e.repeat && e.key == 'Enter' && e.shiftKey) {
-					e.preventDefault();
-					const prevCaretPos = getCaretPosition(cellEl);
-					const text1 = cellEl.innerText.slice(0, prevCaretPos);
-					const text2 = cellEl.innerText.slice(prevCaretPos + 1);
-					cellEl.innerText = [text1, ' <br> ', text2].join('');
-					setCaretPosition(cellEl, prevCaretPos + 6);
-					return;
-				}
-
-				// <enter>
-				// <esc>
-				if (!e.repeat && (e.key == 'Enter' || e.key == 'Escape')) {
-					e.preventDefault();
-					await this.doneEdit(cellEl);
-					return;
-				}
-
-				// <left>
-				if (e.key == 'ArrowLeft') {
-					e.preventDefault();
-					e.stopPropagation();
-					const caretPos = getCaretPosition(cellEl);
-					const { tableLine, i, j } = parseCellId(cellEl.id);
-					// 到最左端了，如果左边还有 cell，再按则跳到左边的 cell
-					if (caretPos == 0) {
-						setTimeout(() => {
-							const newCellEl = activeDocument.getElementById(`cell_${tableLine}_${i}_${j - 1}`);
-							if (newCellEl instanceof HTMLTableCellElement) {
-								newCellEl.click();
-							}
-						}, 200);
-					} else { // 否则光标左移一个字符
-						setCaretPosition(cellEl, caretPos - 1);
-					}
-					return;
-				}
-
-				// <right>
-				if (e.key == 'ArrowRight') {
-					e.preventDefault();
-					e.stopPropagation();
-					const caretPos = getCaretPosition(cellEl);
-					const { tableLine, i, j } = parseCellId(cellEl.id);
-					// 到最右端了，如果右边还有 cell，再按则跳到右边的 cell
-					if (caretPos >= cellEl.innerText.length) {
-						setTimeout(() => {
-							const newCellEl = activeDocument.getElementById(`cell_${tableLine}_${i}_${j + 1}`);
-							if (newCellEl instanceof HTMLTableCellElement) {
-								newCellEl.click();
-							}
-						}, 200);
-					} else { // 否则光标左移一个字符
-						setCaretPosition(cellEl, caretPos + 1);
-					}
-					return;
-				}
-
-				// 提供 <c-a> 全选
-				if (!e.repeat && e.ctrlKey && e.key == 'a') {
-					e.preventDefault();
-					e.stopPropagation();
-					const selection = activeWindow.getSelection();
-					const range = activeDocument.createRange();
-					range.selectNodeContents(cellEl);
-					selection?.removeAllRanges();
-					selection?.addRange(range);
-					return;
-				}
-
-				// <up>
-				if (e.key == 'ArrowUp') {
-					e.preventDefault();
-					e.stopPropagation();
-					const { tableLine, i, j } = parseCellId(cellEl.id);
-					setTimeout(() => {
-						const newCellEl = activeDocument.getElementById(`cell_${tableLine}_${i - 1}_${j}`);
-						if (newCellEl instanceof HTMLTableCellElement) {
-							newCellEl.click();
-						}
-					}, 200);
-					return;
-				}
-
-				// <down>
-				if (e.key == 'ArrowDown') {
-					e.preventDefault();
-					e.stopPropagation();
-					const { tableLine, i, j } = parseCellId(cellEl.id);
-					setTimeout(() => {
-						const newCellEl = activeDocument.getElementById(`cell_${tableLine}_${i + 1}_${j}`);
-						if (newCellEl instanceof HTMLTableCellElement) {
-							newCellEl.click();
-						}
-					}, 200);
-					return;
-				}
-
-				// <shift-tab>
-				if (e.shiftKey && e.key == 'Tab') {
-					e.preventDefault();
-					e.stopPropagation();
-					const { tableLine, i, j } = parseCellId(cellEl.id);
-					const table = this.tableEditor.getTable(tableLine);
-					if (!table) {
-						console.error('Cannot get table when trying to done edit');
-						return;
-					}
-					const rowNum = table.cells.length;
-					const colNum = table.formatLine.length;
-					let nextCell;
-					if (i == 0 && j == 0) {
-						nextCell = activeDocument.getElementById(`cell_${tableLine}_${rowNum - 1}_${colNum - 1}`);
-					} else if (j == 0) {
-						nextCell = activeDocument.getElementById(`cell_${tableLine}_${i - 1}_${colNum - 1}`);
-					} else {
-						nextCell = activeDocument.getElementById(`cell_${tableLine}_${i}_${j - 1}`);
-					}
-					if (nextCell instanceof HTMLTableCellElement)
-						nextCell.click();
-					return;
-				}
-
-				// <tab>
-				if (e.key == 'Tab') {
-					e.preventDefault();
-					e.stopPropagation();
-					const { tableLine, i, j } = parseCellId(cellEl.id);
-					const table = this.tableEditor.getTable(tableLine);
-					if (!table) {
-						console.error('Cannot get table when trying to done edit');
-						return;
-					}
-					const rowNum = table.cells.length;
-					const colNum = table.formatLine.length;
-					let nextCell;
-					if (i == rowNum - 1 && j == rowNum - 1) {
-						nextCell = activeDocument.getElementById(`cell_${tableLine}_0_0`);
-					} else if (j == colNum - 1) {
-						nextCell = activeDocument.getElementById(`cell_${tableLine}_${i + 1}_0`);
-					} else {
-						nextCell = activeDocument.getElementById(`cell_${tableLine}_${i}_${j + 1}`);
-					}
-					if (nextCell instanceof HTMLTableCellElement)
-						nextCell.click();
-					return;
-				}
-			});
+			// 注册按键事件处理器
+			const keydownHandler = getKeydownHandler(this);
+			this.registerDomEvent(markdownView.contentEl, 'keydown', keydownHandler);
 		});
 
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor) => {
@@ -225,6 +81,36 @@ export default class TableEnhancer2 extends Plugin {
 		}));
 	}
 
+	setCellEditing(
+		cellEl: HTMLTableCellElement,
+		tableLine: number,
+		i: number,
+		j: number
+	) {
+		const table = this.tableEditor.getTable(tableLine);
+		if (!table) {
+			console.error('Cannot get table of cell ', cellEl);
+			return;
+		}
+		const text = getCellText(table, i, j);
+		if (text == null)
+			return;
+		// 加上 class
+		cellEl.addClass(editingCellClassName);
+		// 聚焦
+		cellEl.focus();
+		// 使这个 cell 可编辑
+		cellEl.contentEditable = 'true';
+		// 内容替换
+		if (text == '') {
+			cellEl.innerText = ' ';
+			setCaretPosition(cellEl, 0);
+		} else {
+			cellEl.innerText = text!;
+			setCaretPosition(cellEl, text!.length);
+		}
+	}
+
 	async doneEdit(cellEl?: HTMLTableCellElement) {
 		if (!cellEl) {
 			const el = activeDocument.querySelector('.' + editingCellClassName);
@@ -239,7 +125,7 @@ export default class TableEnhancer2 extends Plugin {
 		cellEl.removeClass(editingCellClassName);
 
 		// 提交更改
-		const { tableLine, i, j } = parseCellId(cellEl.id);
+		const { tableLine, i, j } = getCellInfo(cellEl, this)!;
 		const table = this.tableEditor.getTable(tableLine);
 		if (!table) {
 			console.error('Cannot get table when trying to done edit');

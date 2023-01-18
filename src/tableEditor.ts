@@ -122,9 +122,9 @@ export class TableEditor {
 			console.error('Cannot get editor');
 			return;
 		}
-		// 没有改变，不用更新
+		// 没有改变，加一个空格，保证 dom 会更新
 		if (newContent == table.cells[i][j])
-			return;
+			newContent += ' ';
 		table.cells[i][j] = newContent; // update cell
 		const rowLineNumber = TableEditor.getLineNumber(table, i);
 		const newLine = TableEditor.rowCells2rowString(table.cells[i]);
@@ -269,11 +269,19 @@ export class TableEditor {
 				row.push('  ');
 			}
 		}
-		const rowLineNumber = TableEditor.getLineNumber(table, rowIndex);
-		withoutScrollAndFocus(editorView, () => {
-			editorView.dispatch(insertLineBelow(editor, rowLineNumber));
-			editorView.dispatch(setLineWithoutScroll(editor, rowLineNumber + 1, TableEditor.rowCells2rowString(row as string[])));
-		});
+		if (rowIndex == 0) {
+			const rowLineNumber = table.fromLine + 1;
+			withoutScrollAndFocus(editorView, () => {
+				editorView.dispatch(insertLineBelow(editor, rowLineNumber));
+				editorView.dispatch(setLineWithoutScroll(editor, rowLineNumber + 1, TableEditor.rowCells2rowString(row as string[])));
+			});
+		} else {
+			const rowLineNumber = TableEditor.getLineNumber(table, rowIndex);
+			withoutScrollAndFocus(editorView, () => {
+				editorView.dispatch(insertLineBelow(editor, rowLineNumber));
+				editorView.dispatch(setLineWithoutScroll(editor, rowLineNumber + 1, TableEditor.rowCells2rowString(row as string[])));
+			});
+		}
 	}
 
 	/**

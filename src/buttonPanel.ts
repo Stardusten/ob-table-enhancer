@@ -1,6 +1,6 @@
 import {BaseComponent, ButtonComponent, CloseableComponent, Editor, Menu, MenuItem, Notice} from "obsidian";
 import TableEnhancer2 from "../main";
-import {parseCellId} from "./global";
+import {getCellInfo} from "./global";
 import {insertRowBelow, insertColRight, cloneRow, cloneCol, delRow, delCol} from "./icon";
 import {EditorView} from "@codemirror/view";
 
@@ -19,7 +19,7 @@ export const addButtons = (
 			.setTooltip('Insert row below')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to insert row below ', cellEl);
@@ -32,7 +32,7 @@ export const addButtons = (
 			.setTooltip('Insert column right')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				console.log(table);
 				if (!table) {
@@ -46,7 +46,7 @@ export const addButtons = (
 			.setTooltip('Clone row')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to copy row below ', cellEl);
@@ -59,7 +59,7 @@ export const addButtons = (
 			.setTooltip('Clone column')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to copy row below ', cellEl);
@@ -74,7 +74,7 @@ export const addButtons = (
 			.setTooltip('Delete row')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to copy row below ', cellEl);
@@ -87,7 +87,7 @@ export const addButtons = (
 			.setTooltip('Delete column')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to copy row below ', cellEl);
@@ -101,7 +101,7 @@ export const addButtons = (
 			.setIcon('chevron-left')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to copy row below ', cellEl);
@@ -118,7 +118,7 @@ export const addButtons = (
 			.setIcon('chevron-right')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to copy row below ', cellEl);
@@ -136,7 +136,7 @@ export const addButtons = (
 			.setIcon('chevron-up')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to copy row below ', cellEl);
@@ -153,7 +153,7 @@ export const addButtons = (
 			.setIcon('chevron-down')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = parseCellId(cellEl.id);
+				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
 					console.error('cannot locate table when trying to copy row below ', cellEl);
@@ -167,7 +167,7 @@ export const addButtons = (
 				await plugin.tableEditor.swapRows(table, i, i + 1);
 			});
 		const setColAlign = (aligned: 'left' | 'center' | 'right') => async () => {
-			const { tableLine, i, j } = parseCellId(cellEl.id);
+			const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 			const table = plugin.tableEditor.getTable(tableLine);
 			if (!table) {
 				console.error('cannot locate table when trying to copy row below ', cellEl);

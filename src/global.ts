@@ -1,4 +1,8 @@
 import {TableEditor} from "./tableEditor";
+import TableEnhancer2 from "../main";
+import {MarkdownView} from "obsidian";
+import {EditorView} from "@codemirror/view";
+import {off} from "codemirror";
 
 export const editingCellClassName = 'editing-cell';
 export const hoveredCellClassName = 'hovered-cell';
@@ -58,7 +62,7 @@ export interface Table {
 	cells: string[][],
 }
 
-export function getCell(table: Table, i: number, j: number) {
+export function getCellText(table: Table, i: number, j: number) {
 	let result = null;
 	try {
 		result = table.cells[i][j];
@@ -69,11 +73,55 @@ export function getCell(table: Table, i: number, j: number) {
 	return result;
 }
 
-export function parseCellId(cellId: string) {
-	const arr = cellId.split('_');
-	return {
-		tableLine: parseInt(arr[1]),
-		i: parseInt(arr[2]),
-		j: parseInt(arr[3]),
+export function getCellInfo(
+	cellEl: HTMLTableCellElement,
+	plugin: TableEnhancer2,
+	tableEl?: HTMLTableElement,
+	editorView?: EditorView
+) {
+	if (!tableEl) {
+		// 确定这个单元格所属的 table
+		let parent = cellEl.parentNode;
+		while (parent) {
+			if (parent instanceof HTMLTableElement)
+				break;
+			parent = parent.parentNode;
+		}
+		if (parent) tableEl = parent;
 	}
+	if (!tableEl) {
+		console.error('Cannot get table element of cell ', cellEl);
+		return;
+	}
+	// 获得 editorView
+	if (!editorView) {
+		const markdownView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+		const editor = markdownView?.editor;
+		editorView = (editor as any)?.cm as EditorView;
+	}
+	// 计算这个表格在第几行
+	const tablePos = editorView.posAtDOM(tableEl);
+	const tableLine = editorView.state.doc.lineAt(tablePos).number - 1;
+	// 计算这个单元格在第几行第几列
+	const trEl = cellEl.closest('tr');
+	const i = trEl!.rowIndex;
+	const j = cellEl.cellIndex;
+	return { tableLine, i, j };
+}
+
+export function getCellEl(tablePos: number, i: number, j: number, plugin: TableEnhancer2) {
+	const markdownView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+	const editor = markdownView?.editor;
+	const editorView = (editor as any)?.cm as EditorView;
+	const { node, offset } = editorView.domAtPos(tablePos);
+	const el = node.childNodes[offset];
+	if (!(el instanceof HTMLElement))
+		return null;
+	const tables = el.getElementsByTagName('table');
+	if (tables.length > 1) {
+		console.error('More than 1 tables were found');
+		return null;
+	}
+	const table = tables[0];
+	return table?.rows[i]?.cells[j];
 }

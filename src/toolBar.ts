@@ -9,7 +9,7 @@ import {
 	moveRightIcon,
 	upwardIcon
 } from "./icon";
-import {parseCellId, Table} from "./global";
+import {getCellInfo, Table} from "./global";
 import {Notice} from "obsidian";
 
 export class ToolBar {
@@ -211,7 +211,7 @@ export class ToolBar {
 		// 清除隐藏计时
 		if (this.hideTimeout)
 			clearTimeout(this.hideTimeout);
-		this.cell = parseCellId(cellEl.id);
+		this.cell = getCellInfo(cellEl, this.plugin)!;
 		// cell 为第一列 cell，展示行操作 toolbar
 		if (this.cell.j == 0) {
 			this.activeOpBars.push(this.rowOpBarEl);
