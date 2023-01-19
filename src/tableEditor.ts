@@ -494,7 +494,7 @@ export class TableEditor {
 			}
 		} catch (err) {
 			console.error(err);
-			console.log(cells);
+			console.error(cells);
 			throw err;
 		}
 		return result.join('');

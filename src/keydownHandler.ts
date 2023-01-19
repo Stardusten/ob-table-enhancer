@@ -55,7 +55,6 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			const { tableLine, i, j } = getCellInfo(cellEl, plugin, tableEl)!;
 			// 到最左端了，如果左边还有 cell，再按则跳到左边的 cell
 			if (caretPos == 0) {
-				console.log('---')
 				e.preventDefault();
 				const tablePos = editorView.posAtDOM(tableEl);
 				cellEl.blur();

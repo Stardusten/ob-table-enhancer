@@ -34,7 +34,6 @@ export const addButtons = (
 			.onClick(async () => {
 				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				const table = plugin.tableEditor.getTable(tableLine);
-				console.log(table);
 				if (!table) {
 					console.error('cannot locate table when trying to insert column below ', cellEl);
 					return;
@@ -66,7 +65,6 @@ export const addButtons = (
 					return;
 				}
 				const col = table.cells.map(row => row[j]);
-				console.log(col);
 				await plugin.tableEditor.insertColRight(table, j, col);
 			})
 			.then(button => button.buttonEl.innerHTML = cloneCol);

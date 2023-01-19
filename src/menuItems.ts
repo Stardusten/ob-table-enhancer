@@ -56,7 +56,6 @@ export const getCloneColItem = (plugin: TableEnhancer2, cellEl: HTMLTableCellEle
 			return;
 		}
 		const col = table.cells.map(row => row[j]);
-		console.log(col);
 		await plugin.tableEditor.insertColRight(table, j, col);
 	});
 }

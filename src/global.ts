@@ -68,7 +68,7 @@ export function getCellText(table: Table, i: number, j: number) {
 		result = table.cells[i][j];
 	} catch (err) {
 		result = null;
-		console.log('Cannot get cell i=', i, ', j=', j, ' from table=', table);
+		console.error('Cannot get cell i=', i, ', j=', j, ' from table=', table);
 	}
 	return result;
 }

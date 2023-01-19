@@ -21,8 +21,12 @@ export function getTableHoverPostProcessor(
 						cell.removeClass(hoveredCellClassName);
 					});
 					// 单元格失焦，则结束编辑
-					cell.addEventListener('blur', async () => {
-						await plugin.doneEdit(cell);
+					cell.addEventListener('focusout', async e => {
+						// TODO XXX 防止多次触发
+						if (e.targetNode instanceof HTMLTableCellElement) {
+							if (!e.targetNode.hasClass(hoveredCellClassName))
+								await plugin.doneEdit(cell);
+						}
 					})
 				}
 			}

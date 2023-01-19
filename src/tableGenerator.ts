@@ -54,7 +54,6 @@ class TableGenerator extends Menu {
 				// 点击格子时，创建对应大小的表格
 				gridEl.addEventListener('click', async () => {
 					// i + 1 行，j + 1 列
-					console.log('---');
 					await this.plugin.tableEditor.createEmptyTable(i + 1, j + 1);
 				});
 				// 鼠标进入格子时，更新格子高亮

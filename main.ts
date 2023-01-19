@@ -21,7 +21,7 @@ import {addTableGenerator} from "./src/tableGenerator";
 import {DEFAULT_SETTINGS, TableEnhancer2Settings, TableEnhancer2SettingTab} from "./src/settings";
 import {getTableHoverPostProcessor} from "./src/tableHoverPostProcessor";
 import {getClickHandler} from "./src/clickHandler";
-import {getKeydownHandler} from "./src/getKeydownHandler";
+import {getKeydownHandler} from "./src/keydownHandler";
 
 export default class TableEnhancer2 extends Plugin {
 
@@ -131,6 +131,7 @@ export default class TableEnhancer2 extends Plugin {
 			console.error('Cannot get table when trying to done edit');
 			return;
 		}
+
 		await this.tableEditor.updateCell(table, i, j, cellEl.innerText.trim());
 	}
 

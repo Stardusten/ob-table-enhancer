@@ -37,23 +37,20 @@ export function getClickHandler(plugin: TableEnhancer2) {
 		// 已经处于编辑模式
 		if (cellEl.isContentEditable)
 			return;
-		// 正在编辑另一个 cell
-		const editingCell = activeDocument.getElementsByClassName(editingCellClassName);
-		if (editingCell instanceof HTMLTableCellElement && !cellEl.isSameNode(editingCell)) {
-			await plugin.doneEdit(editingCell);
-			// 结束编辑后，dom 会重绘，因此需要根据 tableLine, i, j 重新找到之前点击的 cell
-			const tablePos = editorView.posAtDOM(tableEl);
-			setTimeout(() => {
-				const newCellEl = getCellEl(tablePos, i, j, plugin);
-				if (!(newCellEl instanceof HTMLTableCellElement)) {
-					console.log('Cannot relocate table cell');
-					return;
-				}
-				// 找到了，将其置为编辑模式
-				plugin.setCellEditing(newCellEl, tableLine, i, j);
-			}, 200);
-			return;
+		const tablePos = editorView.posAtDOM(tableEl);
+		// 结束编辑后，dom 会重绘，因此需要根据 tableLine, i, j 重新找到之前点击的 cell
+		const preventFocus = (e: Event) => {
+			e.preventDefault();
+			e.stopImmediatePropagation();
 		}
-		plugin.setCellEditing(cellEl, tableLine, i, j);
+		setTimeout(() => {
+			const newCellEl = getCellEl(tablePos, i, j, plugin);
+			if (!(newCellEl instanceof HTMLTableCellElement)) {
+				console.error('Cannot relocate table cell');
+				return;
+			}
+			// 找到了，将其置为编辑模式
+			plugin.setCellEditing(newCellEl, tableLine, i, j);
+		}, 50);
 	}
 }
