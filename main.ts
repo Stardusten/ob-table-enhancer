@@ -53,18 +53,13 @@ export default class TableEnhancer2 extends Plugin {
 			if (this.settings.adjustTableCellHeight)
 				activeDocument.body.addClass('table-height-adjust');
 
-			// 注册到 contentEl 而不是 activeDocument，防止在设置面板等地触发
-			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			if (!markdownView)
-				return;
-
 			// 注册点击事件处理器
 			const clickHandler = getMousedownHandler(this);
-			this.registerDomEvent(markdownView.contentEl, 'click', clickHandler, true);
+			this.registerDomEvent(activeDocument, 'click', clickHandler, true);
 
 			// 注册按键事件处理器
 			const keydownHandler = getKeydownHandler(this);
-			this.registerDomEvent(markdownView.contentEl, 'keydown', keydownHandler);
+			this.registerDomEvent(activeDocument, 'keydown', keydownHandler);
 		});
 
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor) => {
