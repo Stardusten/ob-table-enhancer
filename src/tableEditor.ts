@@ -459,6 +459,40 @@ export class TableEditor {
 		}
 	}
 
+	/**
+	 * 按某一列排序
+	 * @param table
+	 * @param colIndex
+	 * @param order 升序还是降序 (默认升序)
+	 */
+	async sortByCol(table: Table, colIndex: number, order?: 'aes' | 'desc') {
+		if (!table) return;
+		const markdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+		const editor = markdownView?.editor;
+		const editorView = (editor as any)?.cm as EditorView;
+		if (!editor || !editorView) {
+			console.error('Cannot get editor');
+			return;
+		}
+		// 排序后的表格体
+		const sortedBody = table.cells.slice(1).sort((row1, row2) => {
+			const cell1 = row1[colIndex].toUpperCase();
+			const cell2 = row2[colIndex].toUpperCase();
+			// 升序排序
+			if (!order || order == 'aes')
+				return cell1 < cell2 ? -1 : cell1 > cell2 ? 1 : 0;
+			else // 降序排序
+				return cell1 < cell2 ? 1 : cell1 > cell2 ? -1 : 0;
+		});
+		const bodyString = sortedBody.map(TableEditor.rowCells2rowString).join('\n');
+		// console.log(bodyString);
+		editor.replaceRange(
+			bodyString,
+			{ line: table.fromLine + 2, ch: 0 },
+			{ line: table.toLine, ch: 0 }
+		);
+	}
+
 	async createEmptyTable(i: number, j: number, fill?: boolean) {
 		if (j < 1 || i < 1) {
 			console.error('Cannot create an empty table');

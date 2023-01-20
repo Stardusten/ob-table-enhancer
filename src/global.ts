@@ -125,3 +125,14 @@ export function getCellEl(tablePos: number, i: number, j: number, plugin: TableE
 	const table = tables[0];
 	return table?.rows[i]?.cells[j];
 }
+
+function throttle(func: any, timeFrame: number) {
+	let lastTime = 0;
+	return function () {
+		const now = new Date().getTime();
+		if (now - lastTime >= timeFrame) {
+			func();
+			lastTime = now;
+		}
+	};
+}

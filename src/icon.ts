@@ -1,3 +1,6 @@
+import TableEnhancer2 from "../main";
+import {addIcon} from "obsidian";
+
 export const insertBelowIcon = `
 <svg
 	t="1661842034318"

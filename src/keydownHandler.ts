@@ -28,7 +28,7 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 		if (!e.repeat && (e.key == 'Enter' || e.key == 'Escape')) {
 			e.stopPropagation();
 			e.preventDefault();
-			cellEl.blur();
+			await plugin.doneEdit(cellEl);
 			return;
 		}
 
@@ -57,7 +57,7 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			if (caretPos == 0) {
 				e.preventDefault();
 				const tablePos = editorView.posAtDOM(tableEl);
-				cellEl.blur();
+				await plugin.doneEdit(cellEl);
 				setTimeout(() => {
 					const newCellEl = getCellEl(tablePos, i, j - 1, plugin);
 					if (newCellEl instanceof HTMLTableCellElement) {
@@ -77,7 +77,7 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			if (caretPos >= cellEl.innerText.length) {
 				e.preventDefault();
 				const tablePos = editorView.posAtDOM(tableEl);
-				cellEl.blur();
+				await plugin.doneEdit(cellEl);
 				setTimeout(() => {
 					const newCellEl = getCellEl(tablePos, i, j + 1, plugin);
 					if (newCellEl instanceof HTMLTableCellElement) {
@@ -95,7 +95,7 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			e.preventDefault();
 			const { tableLine, i, j } = getCellInfo(cellEl, plugin, tableEl)!;
 			const tablePos = editorView.posAtDOM(tableEl);
-			cellEl.blur();
+			await plugin.doneEdit(cellEl);
 			setTimeout(() => {
 				const newCellEl = getCellEl(tablePos, i - 1, j, plugin);
 				if (newCellEl instanceof HTMLTableCellElement) {
@@ -111,7 +111,7 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			e.preventDefault();
 			const { tableLine, i, j } = getCellInfo(cellEl, plugin, tableEl)!;
 			const tablePos = editorView.posAtDOM(tableEl);
-			cellEl.blur();
+			await plugin.doneEdit(cellEl);
 			setTimeout(() => {
 				const newCellEl = getCellEl(tablePos, i + 1, j, plugin);
 				if (newCellEl instanceof HTMLTableCellElement) {
@@ -152,7 +152,7 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 				nextI = i;
 				nextJ = j - 1;
 			}
-			cellEl.blur();
+			await plugin.doneEdit(cellEl);
 			setTimeout(() => {
 				const newCellEl = getCellEl(tablePos, nextI, nextJ, plugin);
 				if (newCellEl instanceof HTMLTableCellElement) {
@@ -180,7 +180,7 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 				nextI = i;
 				nextJ = j + 1;
 			}
-			cellEl.blur();
+			await plugin.doneEdit(cellEl);
 			setTimeout(() => {
 				const newCellEl = getCellEl(tablePos, nextI, nextJ, plugin);
 				if (newCellEl instanceof HTMLTableCellElement) {

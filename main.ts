@@ -20,7 +20,7 @@ import {addButtons} from "./src/buttonPanel";
 import {addTableGenerator} from "./src/tableGenerator";
 import {DEFAULT_SETTINGS, TableEnhancer2Settings, TableEnhancer2SettingTab} from "./src/settings";
 import {getTableHoverPostProcessor} from "./src/tableHoverPostProcessor";
-import {getClickHandler} from "./src/clickHandler";
+import {getMousedownHandler} from "./src/mousedownHandler";
 import {getKeydownHandler} from "./src/keydownHandler";
 
 export default class TableEnhancer2 extends Plugin {
@@ -58,9 +58,9 @@ export default class TableEnhancer2 extends Plugin {
 			if (!markdownView)
 				return;
 
-			// 注册单击事件处理器
-			const clickHandler = getClickHandler(this);
-			this.registerDomEvent(markdownView.contentEl, 'click', clickHandler);
+			// 注册点击事件处理器
+			const clickHandler = getMousedownHandler(this);
+			this.registerDomEvent(markdownView.contentEl, 'click', clickHandler, true);
 
 			// 注册按键事件处理器
 			const keydownHandler = getKeydownHandler(this);
