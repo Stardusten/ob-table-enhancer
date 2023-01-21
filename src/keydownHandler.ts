@@ -1,10 +1,34 @@
 import TableEnhancer2 from "../main";
 import {editingCellClassName, getCaretPosition, getCellEl, getCellInfo, setCaretPosition} from "./global";
 import {MarkdownView} from "obsidian";
-import {EditorView} from "@codemirror/view";
+import {EditorView, keymap} from "@codemirror/view";
 
 export function getKeydownHandler(plugin: TableEnhancer2) {
 	return async (e: KeyboardEvent) => {
+
+		// 获得 editorView TODO performance issue?
+		const markdownView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!markdownView) return;
+		const editor = markdownView.editor;
+		const editorView = (editor as any)?.cm as EditorView;
+
+		// 撤回 & 重做
+		if (!editor.hasFocus()) {
+			console.log(e);
+			if (!e.repeat && e.ctrlKey && e.key == 'z') {
+				e.stopPropagation();
+				e.preventDefault();
+				editor.undo();
+				editor.blur();
+				return;
+			} else if (!e.repeat && e.ctrlKey && e.key == 'Z') {
+				e.stopPropagation();
+				e.preventDefault();
+				editor.redo();
+				editor.blur();
+				return;
+			}
+		}
 
 		// 当前没有在编辑 cell，则不处理
 		const cellEl = activeDocument.querySelector('.' + editingCellClassName);
@@ -43,11 +67,6 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			console.error('Cannot find table of cell', cellEl);
 			return;
 		}
-
-		// 获得 editorView
-		const markdownView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-		const editor = markdownView?.editor;
-		const editorView = (editor as any)?.cm as EditorView;
 
 		// <left>
 		if (e.key == 'ArrowLeft') {
@@ -162,6 +181,7 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			return;
 		}
 
+		// tab
 		if (e.key == 'Tab') {
 			e.stopPropagation();
 			e.preventDefault();

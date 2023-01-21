@@ -22,6 +22,8 @@ import {DEFAULT_SETTINGS, TableEnhancer2Settings, TableEnhancer2SettingTab} from
 import {getTableHoverPostProcessor} from "./src/tableHoverPostProcessor";
 import {getMousedownHandler} from "./src/mousedownHandler";
 import {getKeydownHandler} from "./src/keydownHandler";
+import {around} from "monkey-around";
+import {getCommands} from "./src/commands";
 
 export default class TableEnhancer2 extends Plugin {
 
@@ -55,11 +57,23 @@ export default class TableEnhancer2 extends Plugin {
 
 			// 注册点击事件处理器
 			const clickHandler = getMousedownHandler(this);
-			this.registerDomEvent(activeDocument, 'click', clickHandler, true);
+			this.registerDomEvent(window, 'click', clickHandler, true);
 
 			// 注册按键事件处理器
 			const keydownHandler = getKeydownHandler(this);
-			this.registerDomEvent(activeDocument, 'keydown', keydownHandler);
+			this.registerDomEvent(window, 'keydown', keydownHandler, true);
+
+			const commands = getCommands(this) as any;
+			this.register(
+				around((this.app as any).commands, {
+					executeCommand(next) {
+						return function (command: any) {
+							if (!commands[command.id]?.call())
+								next.call(this, command);
+						}
+					}
+				})
+			)
 		});
 
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor) => {
@@ -71,8 +85,10 @@ export default class TableEnhancer2 extends Plugin {
 					addTableGenerator(menu, this, editor);
 				return;
 			}
+			// 先获得行列信息，而不是先保存更改，因为保存更改会触发重绘，导致 posAtDom 没法用
+			const cellInfo = getCellInfo(hoveredCell, this)!;
 			if (this.settings.enableButtonPanel)
-				addButtons(menu, this, hoveredCell);
+				addButtons(menu, this, cellInfo);
 		}));
 	}
 

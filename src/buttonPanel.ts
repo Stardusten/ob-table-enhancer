@@ -7,7 +7,7 @@ import {EditorView} from "@codemirror/view";
 export const addButtons = (
 	menu: Menu,
 	plugin: TableEnhancer2,
-	cellEl: HTMLTableCellElement
+	{ tableLine, i, j }: { tableLine: number, i: number, j: number }
 ) => {
 	const oldOnLoad = menu.onload;
 	menu.onload = () => {
@@ -19,12 +19,10 @@ export const addButtons = (
 			.setTooltip('Insert row below')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				// 先获得行列信息，而不是先保存更改，因为保存更改会触发重绘，导致 posAtDom 没法用
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit(); // 先保存更改再获取 table，防止取到过时的表格内容
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to insert row below ', cellEl);
+					console.error('cannot locate table when trying to insert row below ');
 					return;
 				}
 				await plugin.tableEditor.insertRowBelow(table, i);
@@ -34,11 +32,10 @@ export const addButtons = (
 			.setTooltip('Insert column right')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to insert column below ', cellEl);
+					console.error('cannot locate table when trying to insert column below ');
 					return;
 				}
 				await plugin.tableEditor.insertColRight(table, j);
@@ -48,11 +45,10 @@ export const addButtons = (
 			.setTooltip('Clone row')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to copy row below ', cellEl);
+					console.error('cannot locate table when trying to copy row below ');
 					return;
 				}
 				await plugin.tableEditor.insertRowBelow(table, i, table.cells[i]);
@@ -62,11 +58,10 @@ export const addButtons = (
 			.setTooltip('Clone column')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to copy row below ', cellEl);
+					console.error('cannot locate table when trying to copy row below ');
 					return;
 				}
 				const col = table.cells.map(row => row[j]);
@@ -77,11 +72,10 @@ export const addButtons = (
 			.setTooltip('Delete row')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to copy row below ', cellEl);
+					console.error('cannot locate table when trying to copy row below ');
 					return;
 				}
 				await plugin.tableEditor.deleteRow(table, i);
@@ -91,11 +85,10 @@ export const addButtons = (
 			.setTooltip('Delete column')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to copy row below ', cellEl);
+					console.error('cannot locate table when trying to copy row below ');
 					return;
 				}
 				await plugin.tableEditor.deleteCol(table, j);
@@ -106,11 +99,10 @@ export const addButtons = (
 			.setIcon('chevron-left')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to copy row below ', cellEl);
+					console.error('cannot locate table when trying to copy row below ');
 					return;
 				}
 				if (j == 0) {
@@ -124,11 +116,10 @@ export const addButtons = (
 			.setIcon('chevron-right')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to copy row below ', cellEl);
+					console.error('cannot locate table when trying to copy row below ');
 					return;
 				}
 				const colNum = table.formatLine.length;
@@ -143,11 +134,10 @@ export const addButtons = (
 			.setIcon('chevron-up')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to copy row below ', cellEl);
+					console.error('cannot locate table when trying to copy row below ');
 					return;
 				}
 				if (i == 1) {
@@ -161,11 +151,10 @@ export const addButtons = (
 			.setIcon('chevron-down')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying to copy row below ', cellEl);
+					console.error('cannot locate table when trying to copy row below ');
 					return;
 				}
 				const rowNum = table.cells.length;
@@ -176,11 +165,10 @@ export const addButtons = (
 				await plugin.tableEditor.swapRows(table, i, i + 1);
 			});
 		const setColAlign = (aligned: 'left' | 'center' | 'right') => async () => {
-			const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 			await plugin.doneEdit();
 			const table = plugin.tableEditor.getTable(tableLine);
 			if (!table) {
-				console.error('cannot locate table when trying to copy row below ', cellEl);
+				console.error('cannot locate table when trying to copy row below ');
 				return;
 			}
 			await plugin.tableEditor.setColAligned(table, j, aligned);
@@ -205,11 +193,10 @@ export const addButtons = (
 			.setIcon('sort-asc')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying sort table ', cellEl);
+					console.error('cannot locate table when trying sort table ');
 					return;
 				}
 				await plugin.tableEditor.sortByCol(table, j, 'aes');
@@ -219,11 +206,10 @@ export const addButtons = (
 			.setIcon('sort-desc')
 			.setClass('clickable-icon')
 			.onClick(async () => {
-				const { tableLine, i, j } = getCellInfo(cellEl, plugin)!;
 				await plugin.doneEdit();
 				const table = plugin.tableEditor.getTable(tableLine);
 				if (!table) {
-					console.error('cannot locate table when trying sort table ', cellEl);
+					console.error('cannot locate table when trying sort table ');
 					return;
 				}
 				await plugin.tableEditor.sortByCol(table, j, 'desc');

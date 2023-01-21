@@ -23,6 +23,7 @@
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
-		"@codemirror/language": "^6.3.2"
+		"@codemirror/language": "^6.3.2",
+		"monkey-around": "^2.3.0"
 	}
 }

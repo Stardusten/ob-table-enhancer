@@ -126,7 +126,7 @@ export function getCellEl(tablePos: number, i: number, j: number, plugin: TableE
 	return table?.rows[i]?.cells[j];
 }
 
-function throttle(func: any, timeFrame: number) {
+export function throttle(func: any, timeFrame: number) {
 	let lastTime = 0;
 	return function () {
 		const now = new Date().getTime();
@@ -135,4 +135,20 @@ function throttle(func: any, timeFrame: number) {
 			lastTime = now;
 		}
 	};
+}
+
+export function withEditingCell<T>(callback: (cellEl: HTMLTableCellElement) => T) {
+	// 当前没有在编辑 cell，则不处理
+	const cellEl = activeDocument.querySelector('.' + editingCellClassName);
+	if (!(cellEl instanceof HTMLTableCellElement))
+		return null;
+	return callback(cellEl);
+}
+
+export function withHoveredCell<T>(callback: (cellEl: HTMLTableCellElement) => T) {
+	// 当前没有在编辑 cell，则不处理
+	const cellEl = activeDocument.querySelector('.' + hoveredCellClassName);
+	if (!(cellEl instanceof HTMLTableCellElement))
+		return null;
+	return callback(cellEl);
 }
