@@ -14,7 +14,6 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 
 		// 撤回 & 重做
 		if (!editor.hasFocus()) {
-			console.log(e);
 			if (!e.repeat && e.ctrlKey && e.key == 'z') {
 				e.stopPropagation();
 				e.preventDefault();
