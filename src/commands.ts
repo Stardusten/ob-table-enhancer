@@ -108,6 +108,7 @@ export const getCommands = (plugin: TableEnhancer2) => { return {
 		const succText = cellEl.innerText.slice(selectionEnd);
 		cellEl.innerText = [prevText, '==', selectText, '==', succText].join('');
 		setCaretPosition(cellEl, selectionEnd + 4);
+		return true;
 	}),
 	'editor:toggle-numbered-list': () => withEditingCell(cellEl => {
 		return null; // do nothing
@@ -128,5 +129,6 @@ export const getCommands = (plugin: TableEnhancer2) => { return {
 		const succText = cellEl.innerText.slice(selectionEnd);
 		cellEl.innerText = [prevText, '~~', selectText, '~~', succText].join('');
 		setCaretPosition(cellEl, selectionEnd + 4);
+		return true;
 	}),
 }}

@@ -63,20 +63,26 @@ export default class TableEnhancer2 extends Plugin {
 			const keydownHandler = getKeydownHandler(this);
 			this.registerDomEvent(window, 'keydown', keydownHandler, true);
 
-			const commands = getCommands(this) as any;
-			this.register(
-				around((this.app as any).commands, {
-					executeCommand(next) {
-						return function (command: any) {
-							if (!commands[command.id]?.call())
-								next.call(this, command);
-						}
-					}
-				})
-			)
+			// const commands = getCommands(this) as any;
+			// this.register(
+			// 	around((this.app as any).commands, {
+			// 		executeCommand(next) {
+			// 			return function (command: any) {
+			// 				if (!commands[command.id]?.call()) {
+			// 					console.log('Continue ' + command);
+			// 					next.call(this, command);
+			// 				} else {
+			// 					console.log('Intetrcepted ' + command);
+			// 				}
+			// 			}
+			// 		}
+			// 	})
+			// )
 		});
 
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor) => {
+			// 要求不使用原生 menu
+			menu.setUseNativeMenu(false);
 			// 找到是不是在某个 cell 上触发的菜单
 			const hoveredCell = activeDocument.querySelector('.' + hoveredCellClassName);
 			if (!(hoveredCell instanceof HTMLTableCellElement)) {// 没有 hover 在 cell 上
