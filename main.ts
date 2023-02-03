@@ -63,21 +63,20 @@ export default class TableEnhancer2 extends Plugin {
 			const keydownHandler = getKeydownHandler(this);
 			this.registerDomEvent(window, 'keydown', keydownHandler, true);
 
-			// const commands = getCommands(this) as any;
-			// this.register(
-			// 	around((this.app as any).commands, {
-			// 		executeCommand(next) {
-			// 			return function (command: any) {
-			// 				if (!commands[command.id]?.call()) {
-			// 					console.log('Continue ' + command);
-			// 					next.call(this, command);
-			// 				} else {
-			// 					console.log('Intetrcepted ' + command);
-			// 				}
-			// 			}
-			// 		}
-			// 	})
-			// )
+			this.register(
+				around((app as any).commands, {
+					executeCommand(next) {
+						return function (command: any) {
+							const commands = getCommands(this) as any;
+							const callback = commands[command.id];
+							if (callback?.call(this)) {
+								return;
+							}
+							return next.call(this, command);
+						}
+					}
+				})
+			)
 		});
 
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor) => {
