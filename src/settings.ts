@@ -60,12 +60,13 @@ export class TableEnhancer2SettingTab extends PluginSettingTab {
 			.addToggle(c =>c
 				.setValue(this.plugin.settings.removeEditBlockButton)
 				.onChange(async (val) => {
-					this.plugin.settings.removeEditBlockButton = val;
-					if (val) {
+					if (val == true) {
 						activeDocument?.body?.addClass("remove-edit-button")
 					} else {
 						activeDocument?.body?.removeClass("remove-edit-button")
 					}
+					this.plugin.settings.removeEditBlockButton = val;
+					this.display()
 					await this.plugin.saveSettings();
 				}))
 		new Setting(this.containerEl)

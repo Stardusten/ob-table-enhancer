@@ -104,5 +104,5 @@ td:hover {
 }
 
 .remove-edit-button div:has(table) .edit-block-button {
-	display: none;
+	display: none !important;
 }
