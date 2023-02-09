@@ -83,3 +83,26 @@ div.ob-table-enhancer.button-menu > button {
 	/** 防止单元格太窄不方便点击 */
 	height: 1.5em !important;
 }
+
+.markdown-preview-view div:has(table) {
+	overflow-x: scroll !important;
+	margin-bottom: 0.5rem;
+}
+
+.markdown-preview-view div:has(table) table {
+	margin-bottom: 0 !important;
+}
+
+.cm-table-widget {
+	cursor: auto !important;
+	overflow-x: scroll !important;
+}
+
+th:hover,
+td:hover {
+	cursor: text !important;
+}
+
+.remove-edit-button div:has(table) .edit-block-button {
+	display: none;
+}

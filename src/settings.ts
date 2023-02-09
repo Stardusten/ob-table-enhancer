@@ -1,4 +1,4 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import TableEnhancer2 from "../main";
 
 export interface TableEnhancer2Settings {
@@ -6,6 +6,7 @@ export interface TableEnhancer2Settings {
 	enableTableGenerator: boolean,
 	enableFloatingToolbar: boolean,
 	adjustTableCellHeight: boolean,
+	removeEditBlockButton: boolean
 }
 
 export const DEFAULT_SETTINGS: TableEnhancer2Settings = {
@@ -13,6 +14,7 @@ export const DEFAULT_SETTINGS: TableEnhancer2Settings = {
 	enableTableGenerator: true,
 	enableFloatingToolbar: false,
 	adjustTableCellHeight: true,
+	removeEditBlockButton: false
 }
 
 export class TableEnhancer2SettingTab extends PluginSettingTab {
@@ -54,15 +56,32 @@ export class TableEnhancer2SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		new Setting(this.containerEl)
+			.setName('Remove the edit this block button next to a table')
+			.addToggle(c =>c
+				.setValue(this.plugin.settings.removeEditBlockButton)
+				.onChange(async (val) => {
+					this.plugin.settings.removeEditBlockButton = val;
+					if (val) {
+						activeDocument?.body?.addClass("remove-edit-button")
+					} else {
+						activeDocument?.body?.removeClass("remove-edit-button")
+					}
+					await this.plugin.saveSettings();
+				}))
+		new Setting(this.containerEl)
 			.setName('Adjust Height of Table Cells')
 			.setDesc('The default height of an empty cell is very short. Activate this to increase the cell height and make it easier to click.')
 			.addToggle(c => c
 				.setValue(this.plugin.settings.adjustTableCellHeight)
 				.onChange(async (val) => {
-					if (val == true)
+					if (val == true) {
 						activeDocument?.body?.addClass('table-height-adjust');
-					else activeDocument?.body?.removeClass('table-height-adjust');
+
+					} else {
+						activeDocument?.body?.removeClass('table-height-adjust');
+					}
 					this.plugin.settings.adjustTableCellHeight = val;
+					this.display()
 					await this.plugin.saveSettings();
 				}));
 	}
