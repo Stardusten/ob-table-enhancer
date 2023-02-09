@@ -46,6 +46,14 @@ Please Refer: [How to install Obsidian Plugins](https://forum.obsidian.md/t/plug
 
 	![image](https://user-images.githubusercontent.com/38722307/212823667-3074341f-88ed-4a41-85c2-ec45e76319aa.gif)
 
+# Implementation Notes
+
+The implementation of this plugin is actually quite simple. Just intercept any click event, when any click on table cell is intercepted, then set the cell "contenteditable", allowing people to edit the cell in wyswyg way. When any click is intercepted elsewhere (or other events such as esc being pressed), persist all the editing cells (set "content editable").
+
+Q: How do we know which cell in which table is editing by a intercepted click event? And how do we persist a changed table element to the editor?
+
+A: When we click a table cell, we can use `evt.targetNode` to get the clicked cell. And we can also get it's parent table element. Using `EditorView.posAtDom(tableEl)` provided by CM6, we can get the start line number of a table element. This allows us to build a mapping between table elements and  their markdown source code: using `editor.getLine()`, we can get the markdown source code of the table, then do some parse and replace, we can calculate the markdown source code after the changes.
+
 
 ## By Me a Coffee
 
