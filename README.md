@@ -45,3 +45,8 @@ Please Refer: [How to install Obsidian Plugins](https://forum.obsidian.md/t/plug
  7. Right-click on any table cell, and you will see a panel of buttons at the top of the pop-out menu. Try hovering your mouse over a button, and you will see a tooltip that tells you what the button does.
 
 	![image](https://user-images.githubusercontent.com/38722307/212823667-3074341f-88ed-4a41-85c2-ec45e76319aa.gif)
+
+
+## By Me a Coffee
+
+<a href="https://www.buymeacoffee.com/stardust007" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
