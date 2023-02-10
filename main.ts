@@ -7,7 +7,7 @@ import {
 	setCaretPosition
 } from "./src/global";
 import {TableEditor} from "./src/tableEditor";
-import {EditorView} from "@codemirror/view";
+import {EditorView, placeholder} from "@codemirror/view";
 import {
 	getCloneColItem,
 	getCloneRowItem, getColAlignItem, getDelColItem,
@@ -20,7 +20,7 @@ import {addButtons} from "./src/buttonPanel";
 import {addTableGenerator} from "./src/tableGenerator";
 import {DEFAULT_SETTINGS, TableEnhancer2Settings, TableEnhancer2SettingTab} from "./src/settings";
 import {getTableHoverPostProcessor} from "./src/tableHoverPostProcessor";
-import {getMousedownHandler} from "./src/mousedownHandler";
+import {getClickHandler, getMousedownHandler} from "./src/mousedownHandler";
 import {getKeydownHandler} from "./src/keydownHandler";
 import {around} from "monkey-around";
 import {getCommands} from "./src/commands";
@@ -56,7 +56,10 @@ export default class TableEnhancer2 extends Plugin {
 				activeDocument.body.addClass('table-height-adjust');
 
 			// 注册点击事件处理器
-			const clickHandler = getMousedownHandler(this);
+			const mousedownHandler = getMousedownHandler(this);
+			this.registerDomEvent(window, 'mousedown', mousedownHandler, true);
+
+			const clickHandler = getClickHandler(this);
 			this.registerDomEvent(window, 'click', clickHandler, true);
 
 			// 注册按键事件处理器
@@ -148,7 +151,7 @@ export default class TableEnhancer2 extends Plugin {
 			return;
 		}
 
-		await this.tableEditor.updateCell(table, i, j, cellEl.innerText.trim());
+		await this.tableEditor.updateCell(table, i, j, cellEl.innerText);
 	}
 
 	isInReadingView() {

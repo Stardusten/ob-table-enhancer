@@ -1,6 +1,6 @@
 import {BaseComponent, ButtonComponent, CloseableComponent, Editor, Menu, MenuItem, Notice} from "obsidian";
 import TableEnhancer2 from "../main";
-import {getCellInfo} from "./global";
+import {getCellInfo, getTableOfCell} from "./global";
 import {insertRowBelow, insertColRight, cloneRow, cloneCol, delRow, delCol} from "./icon";
 import {EditorView} from "@codemirror/view";
 
@@ -80,7 +80,23 @@ export const addButtons = (
 				}
 				await plugin.tableEditor.deleteRow(table, i);
 			})
-			.then(button => button.buttonEl.innerHTML = delRow)
+			.then(button => button.buttonEl.innerHTML = delRow);
+		new ButtonComponent(containerEl)
+			.setTooltip('Wider')
+			.setIcon('chevrons-left-right')
+			.setClass('clickable-icon')
+			.onClick(async (e) => {
+				await plugin.doneEdit();
+				const table = plugin.tableEditor.getTable(tableLine);
+				if (!table) {
+					console.error('cannot locate table when trying sort table ');
+					return;
+				}
+				e.stopPropagation();
+				e.preventDefault();
+				const oldContent = table.cells[0][j];
+				await plugin.tableEditor.updateCell(table, 0, j, oldContent + ' ');
+			});
 		new ButtonComponent(containerEl)
 			.setTooltip('Delete column')
 			.setClass('clickable-icon')
@@ -164,6 +180,22 @@ export const addButtons = (
 				}
 				await plugin.tableEditor.swapRows(table, i, i + 1);
 			});
+		new ButtonComponent(containerEl)
+			.setTooltip('Narrower')
+			.setIcon('chevrons-right-left')
+			.setClass('clickable-icon')
+			.onClick(async (e) => {
+				await plugin.doneEdit();
+				const table = plugin.tableEditor.getTable(tableLine);
+				if (!table) {
+					console.error('cannot locate table when trying sort table ');
+					return;
+				}
+				e.stopPropagation();
+				e.preventDefault();
+				const newContent = table.cells[0][j].replace(/ $/, '');
+				await plugin.tableEditor.updateCell(table, 0, j, newContent);
+			});
 		const setColAlign = (aligned: 'left' | 'center' | 'right') => async () => {
 			await plugin.doneEdit();
 			const table = plugin.tableEditor.getTable(tableLine);
@@ -213,6 +245,22 @@ export const addButtons = (
 					return;
 				}
 				await plugin.tableEditor.sortByCol(table, j, 'desc');
+			});
+		new ButtonComponent(containerEl)
+			.setTooltip('Reset Column Width')
+			.setIcon('undo-2')
+			.setClass('clickable-icon')
+			.onClick(async (e) => {
+				await plugin.doneEdit();
+				const table = plugin.tableEditor.getTable(tableLine);
+				if (!table) {
+					console.error('cannot locate table when trying sort table ');
+					return;
+				}
+				e.stopPropagation();
+				e.preventDefault();
+				const newContent = table.cells[0][j].trimRight();
+				await plugin.tableEditor.updateCell(table, 0, j, newContent);
 			});
 
 		const dividerEl = createDiv({ cls: 'menu-separator' });

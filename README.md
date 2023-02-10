@@ -7,6 +7,8 @@ Manipulate markdown tables **_without touching the source code_** in Obsidian.
 - [Quick Demo](#quick-demo)
 - [How to Install](#how-to-install)
 - [Key Features](#key-features)
+- [FAQ](#faq)
+- [Implementation Notes](#implementation-notes)
 
 ## Quick Demo
 
@@ -45,6 +47,16 @@ Please Refer: [How to install Obsidian Plugins](https://forum.obsidian.md/t/plug
  7. Right-click on any table cell, and you will see a panel of buttons at the top of the pop-out menu. Try hovering your mouse over a button, and you will see a tooltip that tells you what the button does.
 
 	![image](https://user-images.githubusercontent.com/38722307/212823667-3074341f-88ed-4a41-85c2-ec45e76319aa.gif)
+	
+# FAQ
+
+# Implementation Notes
+
+The implementation of this plugin is actually quite simple. Just intercept any click event, when any click on table cell is intercepted, then set the cell "contenteditable", allowing people to edit the cell in wyswyg way. When any click is intercepted elsewhere (or other events such as esc being pressed), persist all the editing cells (set "content editable").
+
+Q: How do we know which cell in which table is editing by a intercepted click event? And how do we persist a changed table element to the editor?
+
+A: When we click a table cell, we can use `evt.targetNode` to get the clicked cell. And we can also get it's parent table element. Using `EditorView.posAtDom(tableEl)` provided by CM6, we can get the start line number of a table element. This allows us to build a mapping between table elements and  their markdown source code: using `editor.getLine()`, we can get the markdown source code of the table, then do some parse and replace, we can calculate the markdown source code after the changes.
 
 
 ## By Me a Coffee

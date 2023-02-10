@@ -1,4 +1,3 @@
-
 .ob-table-enhancer-row-bar {
 	display: flex;
 	position: absolute;
@@ -43,7 +42,7 @@
 div.ob-table-enhancer.button-menu {
 	display: flex;
 	flex-wrap: wrap;
-	max-width: 150px;
+	max-width: 180px;
 }
 
 div.ob-table-enhancer.button-menu > button {
@@ -105,4 +104,8 @@ td:hover {
 
 .remove-edit-button div:has(table) .edit-block-button {
 	display: none !important;
+}
+
+body {
+	--layer-tooltip: 2000;
 }
