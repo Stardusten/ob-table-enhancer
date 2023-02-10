@@ -4,7 +4,7 @@ import {EditorView} from "@codemirror/view";
 import {editingCellClassName, getCellEl, getCellText, getCellInfo, setCaretPosition} from "./global";
 import {TableEditor} from "./tableEditor";
 
-export function getMousedownHandler(plugin: TableEnhancer2) {
+export function getClickHandler(plugin: TableEnhancer2) {
 	return async (e: MouseEvent) => {
 		// 阅读模式不使用此插件
 		if (plugin.isInReadingView())
@@ -15,16 +15,8 @@ export function getMousedownHandler(plugin: TableEnhancer2) {
 		const editorView = (editor as any)?.cm as EditorView;
 		// 不是点击单元格触发的事件
 		const cellEl = e.targetNode;
-		if (!(cellEl instanceof HTMLTableCellElement)) {
-			// 如果存在处于编辑模式的单元格，则此单元格退出编辑模式
-			const editingCell = activeDocument.querySelector('.' + editingCellClassName);
-			if (editingCell instanceof HTMLTableCellElement) {
-				// console.log('done edit ', editingCell);
-				await plugin.doneEdit(editingCell);
-				editor?.focus(); // 没有点击单元格，因此恢复编辑器焦点
-			}
+		if (!(cellEl instanceof HTMLTableCellElement))
 			return;
-		}
 		// 否则是点击了某个单元格
 		e.stopImmediatePropagation();
 		e.preventDefault();
@@ -65,5 +57,25 @@ export function getMousedownHandler(plugin: TableEnhancer2) {
 			// 找到了，将其置为编辑模式
 			plugin.setCellEditing(newCellEl, tableLine, i, j);
 		}, 50);
+	}
+}
+
+export function getMousedownHandler(plugin: TableEnhancer2) {
+	return async (e: MouseEvent) => {
+		// 获得 editorView
+		const markdownView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+		const editor = markdownView?.editor;
+		// 不是点击单元格触发的事件
+		const cellEl = e.targetNode;
+		if (!(cellEl instanceof HTMLTableCellElement)) {
+			// 如果存在处于编辑模式的单元格，则此单元格退出编辑模式
+			const editingCell = activeDocument.querySelector('.' + editingCellClassName);
+			if (editingCell instanceof HTMLTableCellElement) {
+				// console.log('done edit ', editingCell);
+				await plugin.doneEdit(editingCell);
+				editor?.focus(); // 没有点击单元格，因此恢复编辑器焦点
+			}
+			return;
+		}
 	}
 }

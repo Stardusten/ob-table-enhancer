@@ -79,16 +79,9 @@ export function getCellInfo(
 	tableEl?: HTMLTableElement,
 	editorView?: EditorView
 ) {
-	if (!tableEl) {
+	if (!tableEl)
 		// 确定这个单元格所属的 table
-		let parent = cellEl.parentNode;
-		while (parent) {
-			if (parent instanceof HTMLTableElement)
-				break;
-			parent = parent.parentNode;
-		}
-		if (parent) tableEl = parent;
-	}
+		tableEl = getTableOfCell(cellEl);
 	if (!tableEl) {
 		console.error('Cannot get table element of cell ', cellEl);
 		return;
@@ -107,6 +100,17 @@ export function getCellInfo(
 	const i = trEl!.rowIndex;
 	const j = cellEl.cellIndex;
 	return { tableLine, i, j };
+}
+
+export function getTableOfCell(cellEl: HTMLTableCellElement) {
+	// 确定这个单元格所属的 table
+	let parent = cellEl.parentNode;
+	while (parent) {
+		if (parent instanceof HTMLTableElement)
+			break;
+		parent = parent.parentNode;
+	}
+	if (parent) return parent;
 }
 
 export function getCellEl(tablePos: number, i: number, j: number, plugin: TableEnhancer2) {
