@@ -151,16 +151,6 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			return;
 		}
 
-		// copy paste replace newlines
-		if (e.ctrlKey && e.key == "v" ) {
-			e.preventDefault();
-			let text = await navigator.clipboard.readText()
-			navigator.clipboard.writeText(text.replaceAll("\n", ' <br> '))
-			text = text.replaceAll("\n", ' <br> ')
-			document.execCommand("insertText", false, text)
-			return;
-		}
-
 		// shift-tab
 		if (e.shiftKey && e.key == 'Tab') {
 			e.stopPropagation();

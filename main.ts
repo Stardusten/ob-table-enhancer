@@ -125,7 +125,7 @@ export default class TableEnhancer2 extends Plugin {
 			cellEl.innerText = ' ';
 			setCaretPosition(cellEl, 0);
 		} else {
-			cellEl.innerText = text!;
+			cellEl.innerText = text.replaceAll('<br>', '\n')!;
 			setCaretPosition(cellEl, text!.length);
 		}
 	}
@@ -151,7 +151,7 @@ export default class TableEnhancer2 extends Plugin {
 			return;
 		}
 
-		await this.tableEditor.updateCell(table, i, j, cellEl.innerText);
+		await this.tableEditor.updateCell(table, i, j, cellEl.innerText.replace('\n',' <br> '));
 	}
 
 	isInReadingView() {
