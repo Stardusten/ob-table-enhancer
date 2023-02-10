@@ -1,7 +1,7 @@
 import TableEnhancer2 from "../main";
 import {editingCellClassName, getCaretPosition, getCellEl, getCellInfo, setCaretPosition} from "./global";
 import {MarkdownView} from "obsidian";
-import {EditorView, keymap} from "@codemirror/view";
+import {EditorView, /*keymap*/} from "@codemirror/view";
 
 export function getKeydownHandler(plugin: TableEnhancer2) {
 	return async (e: KeyboardEvent) => {
@@ -148,6 +148,16 @@ export function getKeydownHandler(plugin: TableEnhancer2) {
 			range.selectNodeContents(cellEl);
 			selection?.removeAllRanges();
 			selection?.addRange(range);
+			return;
+		}
+
+		// copy paste replace newlines
+		if (e.ctrlKey && e.key == "v" ) {
+			e.preventDefault();
+			let text = await navigator.clipboard.readText()
+			navigator.clipboard.writeText(text.replaceAll("\n", ' <br> '))
+			text = text.replaceAll("\n", ' <br> ')
+			document.execCommand("insertText", false, text)
 			return;
 		}
 
