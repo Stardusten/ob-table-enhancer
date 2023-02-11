@@ -126,7 +126,7 @@ export default class TableEnhancer2 extends Plugin {
 			setCaretPosition(cellEl, 0);
 		} else {
 			cellEl.innerText = text.replaceAll('<br>', '\n')!;
-			setCaretPosition(cellEl, text!.length);
+			setCaretPosition(cellEl, 0);
 		}
 	}
 
