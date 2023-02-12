@@ -1,7 +1,7 @@
 import TableEnhancer2 from "../main";
 import {editingCellClassName, getCaretPosition, getCellEl, getCellInfo, setCaretPosition} from "./global";
 import {MarkdownView} from "obsidian";
-import {EditorView, keymap} from "@codemirror/view";
+import {EditorView, /*keymap*/} from "@codemirror/view";
 
 export function getKeydownHandler(plugin: TableEnhancer2) {
 	return async (e: KeyboardEvent) => {

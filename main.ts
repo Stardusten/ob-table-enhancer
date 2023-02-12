@@ -125,8 +125,8 @@ export default class TableEnhancer2 extends Plugin {
 			cellEl.innerText = ' ';
 			setCaretPosition(cellEl, 0);
 		} else {
-			cellEl.innerText = text!;
-			setCaretPosition(cellEl, text!.length);
+			cellEl.innerText = text.replaceAll('<br>', '\n')!;
+			setCaretPosition(cellEl, 0);
 		}
 	}
 
@@ -150,8 +150,7 @@ export default class TableEnhancer2 extends Plugin {
 			console.error('Cannot get table when trying to done edit');
 			return;
 		}
-
-		await this.tableEditor.updateCell(table, i, j, cellEl.innerText);
+		await this.tableEditor.updateCell(table, i, j, cellEl.innerText.replaceAll('\n',' <br> '));
 	}
 
 	isInReadingView() {
