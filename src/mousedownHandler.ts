@@ -14,7 +14,11 @@ export function getClickHandler(plugin: TableEnhancer2) {
 		const editor = markdownView?.editor;
 		const editorView = (editor as any)?.cm as EditorView;
 		// 不是点击单元格触发的事件
-		const cellEl = e.targetNode;
+		let cellEl = e.targetNode;
+		if (cellEl?.parentNode instanceof HTMLTableCellElement) {
+			cellEl = cellEl.parentNode;
+		}
+
 		if (!(cellEl instanceof HTMLTableCellElement))
 			return;
 		// 否则是点击了某个单元格
