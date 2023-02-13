@@ -110,15 +110,15 @@ export const setLineWithoutScroll = (editor: Editor, n: number, text: string) =>
 }
 
 export function withoutScrollAndFocus(editorView: EditorView, callback: () => any) {
+	const contentDom = editorView.contentDOM;
 	const scrollDom = editorView.scrollDOM;
-	const x = scrollDom.scrollLeft
+	const x = scrollDom.scrollLeft;
 	const y = scrollDom.scrollTop;
-	const resetScroll = () => {
+	scrollDom.addEventListener('scroll', (e) => {
+		e.stopImmediatePropagation();
+		e.preventDefault();
 		scrollDom.scrollTo(x, y);
-	}
-	scrollDom.addEventListener('scroll', resetScroll, true);
-	editorView.contentDOM.blur();
+	}, { once: true, capture: true });
 	callback();
-	editorView.contentDOM.blur();
-	scrollDom.removeEventListener('scroll', resetScroll, true);
+	contentDom.blur();
 }

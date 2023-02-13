@@ -51,6 +51,10 @@ export default class TableEnhancer2 extends Plugin {
 		// 按键逻辑
 		this.app.workspace.onLayoutReady(() => {
 
+			const markdownView = app.workspace.getActiveViewOfType(MarkdownView);
+			const editor = markdownView?.editor;
+			const editorView = (editor as any)?.cm as EditorView;
+
 			// 注册样式
 			if (this.settings.adjustTableCellHeight)
 				activeDocument.body.addClass('table-height-adjust');

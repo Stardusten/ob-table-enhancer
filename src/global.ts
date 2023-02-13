@@ -102,7 +102,8 @@ export function getCellInfo(
 	return { tableLine, i, j };
 }
 
-export function getTableOfCell(cellEl: HTMLTableCellElement) {
+export function getTableOfCell(cellEl: Node | null) {
+	if (!cellEl) return;
 	// 确定这个单元格所属的 table
 	let parent = cellEl.parentNode;
 	while (parent) {

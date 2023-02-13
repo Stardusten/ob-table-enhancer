@@ -1,8 +1,37 @@
 import TableEnhancer2 from "../main";
 import {MarkdownView} from "obsidian";
 import {EditorView} from "@codemirror/view";
-import {editingCellClassName, getCellEl, getCellText, getCellInfo, setCaretPosition} from "./global";
+import {editingCellClassName, getCellEl, getCellText, getCellInfo, setCaretPosition, getTableOfCell} from "./global";
 import {TableEditor} from "./tableEditor";
+
+function isClickable(node: Node) {
+	if (node instanceof HTMLElement) {
+		if (node.tagName == 'A')
+			return true;
+	}
+	return false;
+}
+
+function getEditableNode(node: Node | null) {
+	if (!(node instanceof HTMLElement))
+		return null;
+	if (node instanceof HTMLTableCellElement)
+		return node;
+	// 这个 node 本来可以点击，不编辑
+	if (isClickable(node)) return null;
+	// 否则遍历这个 node 的所有父 node
+	let parent = node.parentNode;
+	while (parent) {
+		if (parent instanceof HTMLTableCellElement)
+			break;
+		parent = parent.parentNode;
+	}
+	// console.log(node, parent);
+	// 不是 cell element 的子节点，不编辑
+	if (!parent) return null;
+	// 否则可以编辑
+	return parent;
+}
 
 export function getClickHandler(plugin: TableEnhancer2) {
 	return async (e: MouseEvent) => {
@@ -14,9 +43,8 @@ export function getClickHandler(plugin: TableEnhancer2) {
 		const editor = markdownView?.editor;
 		const editorView = (editor as any)?.cm as EditorView;
 		// 不是点击单元格触发的事件
-		const cellEl = e.targetNode;
-		if (!(cellEl instanceof HTMLTableCellElement))
-			return;
+		const cellEl = getEditableNode(e.targetNode);
+		if (!cellEl) return;
 		// 否则是点击了某个单元格
 		e.stopImmediatePropagation();
 		e.preventDefault();
@@ -65,9 +93,9 @@ export function getMousedownHandler(plugin: TableEnhancer2) {
 		// 获得 editorView
 		const markdownView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
 		const editor = markdownView?.editor;
-		// 不是点击单元格触发的事件
-		const cellEl = e.targetNode;
-		if (!(cellEl instanceof HTMLTableCellElement)) {
+		// 不是点击表格触发的事件
+		const tableEl = getTableOfCell(e.targetNode);
+		if (!tableEl) {
 			// 如果存在处于编辑模式的单元格，则此单元格退出编辑模式
 			const editingCell = activeDocument.querySelector('.' + editingCellClassName);
 			if (editingCell instanceof HTMLTableCellElement) {
