@@ -227,7 +227,13 @@ export class TableEditor {
 			return;
 		}
 		// 添加格式，默认为居左对齐
-		table.formatLine.splice(colIndex + 1, 0, '---');
+		let textAlignment = '---'
+		if (this.plugin.settings.alignment == 'middle') {
+			textAlignment = ':-:'
+		} else if (this.plugin.settings.alignment == 'right') {
+			textAlignment = '--:'
+		}
+		table.formatLine.splice(colIndex + 1, 0, textAlignment);
 		table.cells.forEach((row, idx) => {
 			const newCell = col ? col[idx] : '   ';
 			row.splice(colIndex + 1, 0, newCell);
@@ -508,8 +514,13 @@ export class TableEditor {
 		const cursor = editor.getCursor();
 		const cursorLine = editor.getLine(cursor.line);
 		const bodyString = '|' + '  |'.repeat(j);
-		const formatString = '|' + ':-:|'.repeat(j);
-		let tableArr = [
+		let formatString = '|' + ':-:|'.repeat(j);
+		if (this.plugin.settings.alignment == 'left') {
+			formatString = '|' + ':--|'.repeat(j);
+		} else if (this.plugin.settings.alignment == 'right') {
+			formatString = '|' + '--:|'.repeat(j);
+		}
+		const tableArr = [
 			cursorLine, '\n',
 			bodyString, '\n',
 			formatString, '\n'
