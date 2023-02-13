@@ -18,6 +18,16 @@ Manipulate markdown tables **_without touching the source code_** in Obsidian.
 
 Please Refer: [How to install Obsidian Plugins](https://forum.obsidian.md/t/plugins-mini-faq/7737)
 
+#### Steps to Install
+Note: the plugin is not in the community plugins tab just yet and needs to be manually installed
+
+1. Create a folder called `ob-table-enhancer`
+2. Go to the [releases](https://github.com/Stardusten/ob-table-enhancer/releases/) and download `main.js`, `manifest.json` and `styles.css` of the latest version
+3. Put the downloaded files into the folder
+4. Put the folder in `YourVault/.obsidian/plugins`
+5. Reload the plugins in Obsidian settings or restart the program
+6. Plugin can now be enabled in the plugins menu
+
 ## Key Features
 
 1. You can open a *table generator* by clicking the `Create new table` command in a right-click menu, which allows you to swiftly create an empty table with the specified shape under current cursor.
