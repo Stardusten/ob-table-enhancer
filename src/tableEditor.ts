@@ -226,14 +226,13 @@ export class TableEditor {
 			console.error('Cannot get editor');
 			return;
 		}
-		// 添加格式，默认为居左对齐
-		let textAlignment = '---'
-		if (this.plugin.settings.alignment == 'middle') {
-			textAlignment = ':-:'
-		} else if (this.plugin.settings.alignment == 'right') {
-			textAlignment = '--:'
-		}
-		table.formatLine.splice(colIndex + 1, 0, textAlignment);
+		// 添加格式
+		const textAlignment = this.plugin.settings.defaultAlignmentWhenInsertNewCol == 'left' 	? ':--'
+			: this.plugin.settings.defaultAlignmentWhenInsertNewCol == 'center'					? ':-:'
+			: this.plugin.settings.defaultAlignmentWhenInsertNewCol == 'right'					? '--:'
+			: this.plugin.settings.defaultAlignmentWhenInsertNewCol == 'follow'   				? table.formatLine[colIndex]
+			: null /* IMPOSSIBLE */;
+		table.formatLine.splice(colIndex + 1, 0, textAlignment!);
 		table.cells.forEach((row, idx) => {
 			const newCell = col ? col[idx] : '   ';
 			row.splice(colIndex + 1, 0, newCell);
@@ -302,11 +301,10 @@ export class TableEditor {
 			console.error('Cannot get editor');
 			return;
 		}
-		table.formatLine[colIndex] = aligned == 'left'
-			? ':----'
-			: aligned == 'right'
-				? '----:'
-				: ':---:';
+		table.formatLine[colIndex] = aligned == 'left' 	? ':--'
+			: aligned == 'right' 						? '--:'
+			: aligned == 'center' 						?':-:'
+			: null /* IMPOSSIBLE */!;
 		withoutScrollAndFocus(editorView, () => {
 			editorView.dispatch(setLineWithoutScroll(editor, table.fromLine + 1, TableEditor.rowCells2rowString(table.formatLine)));
 		});
@@ -514,12 +512,10 @@ export class TableEditor {
 		const cursor = editor.getCursor();
 		const cursorLine = editor.getLine(cursor.line);
 		const bodyString = '|' + '  |'.repeat(j);
-		let formatString = '|' + ':-:|'.repeat(j);
-		if (this.plugin.settings.alignment == 'left') {
-			formatString = '|' + ':--|'.repeat(j);
-		} else if (this.plugin.settings.alignment == 'right') {
-			formatString = '|' + '--:|'.repeat(j);
-		}
+		const formatString = this.plugin.settings.defaultAlignmentForTableGenerator == 'left' 	? '|' + ':--|'.repeat(j)
+			: this.plugin.settings.defaultAlignmentForTableGenerator == 'center'				? '|' + ':-:|'.repeat(j)
+			: this.plugin.settings.defaultAlignmentForTableGenerator == 'right'					? '|' + '--:|'.repeat(j)
+			: null /* IMPOSSIBLE */;
 		const tableArr = [
 			cursorLine, '\n',
 			bodyString, '\n',

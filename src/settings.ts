@@ -7,7 +7,9 @@ export interface TableEnhancer2Settings {
 	enableFloatingToolbar: boolean,
 	adjustTableCellHeight: boolean,
 	removeEditBlockButton: boolean,
-	alignment: 'right' | 'left' | 'middle';
+	defaultAlignmentForTableGenerator: 'right' | 'left' | 'center',
+	defaultAlignmentWhenInsertNewCol: 'right' | 'left' | 'center' | 'follow',
+	enableColumnWidthAdjust: boolean,
 }
 
 export const DEFAULT_SETTINGS: TableEnhancer2Settings = {
@@ -16,7 +18,9 @@ export const DEFAULT_SETTINGS: TableEnhancer2Settings = {
 	enableFloatingToolbar: false,
 	adjustTableCellHeight: true,
 	removeEditBlockButton: false,
-	alignment: 'left'
+	defaultAlignmentForTableGenerator: 'left',
+	defaultAlignmentWhenInsertNewCol: 'follow',
+	enableColumnWidthAdjust: true,
 }
 export class TableEnhancer2SettingTab extends PluginSettingTab {
 
@@ -33,7 +37,7 @@ export class TableEnhancer2SettingTab extends PluginSettingTab {
 		this.containerEl.createEl('h2', { text: 'Table Enhancer Settings' });
 		// 设置项
 		new Setting(this.containerEl)
-			.setName('Enable Button Panel')
+			.setName('Enable button panel')
 			.addToggle(c => c
 				.setValue(this.plugin.settings.enableButtonPanel)
 				.onChange(async (val) => {
@@ -41,7 +45,7 @@ export class TableEnhancer2SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		new Setting(this.containerEl)
-			.setName('Enable Table Generator')
+			.setName('Enable table generator')
 			.addToggle(c => c
 				.setValue(this.plugin.settings.enableTableGenerator)
 				.onChange(async (val) => {
@@ -49,7 +53,7 @@ export class TableEnhancer2SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		new Setting(this.containerEl)
-			.setName('Enable Floating Panel')
+			.setName('Enable floating panel')
 			.addToggle(c => c
 				.setValue(this.plugin.settings.enableFloatingToolbar)
 				.onChange(async (val) => {
@@ -57,42 +61,41 @@ export class TableEnhancer2SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		new Setting(this.containerEl)
-			.setName('Remove the edit this block button next to a table')
-			.addToggle(c => c
-				.setValue(this.plugin.settings.removeEditBlockButton)
-				.onChange(async (val) => {
-					if (val == true) {
-						activeDocument?.body?.addClass("remove-edit-button")
-					} else {
-						activeDocument?.body?.removeClass("remove-edit-button")
-					}
-					this.plugin.settings.removeEditBlockButton = val;
-					this.display()
-					await this.plugin.saveSettings();
-				}))
-		new Setting(this.containerEl)
-			.setName('Adjust Height of Table Cells')
+			.setName('Adjust height of cells')
 			.setDesc('The default height of an empty cell is very short. Activate this to increase the cell height and make it easier to click.')
 			.addToggle(c => c
 				.setValue(this.plugin.settings.adjustTableCellHeight)
 				.onChange(async (val) => {
-					if (val == true)
+					if (val)
 						activeDocument?.body?.addClass('table-height-adjust');
 					else activeDocument?.body?.removeClass('table-height-adjust');
 					this.plugin.settings.adjustTableCellHeight = val;
 					await this.plugin.saveSettings();
 				}));
 		new Setting(this.containerEl)
-			.setName('Text alignment')
+			.setName('Default alignment for new created table')
 			.setDesc('Choose if you want to align the text in a cell to the right, left or in the middle.')
 			.addDropdown(d => d
 				.addOption('left', 'left')
-				.addOption('middle', 'middle')
+				.addOption('center', 'center')
 				.addOption('right', 'right')
-				.setValue(this.plugin.settings.alignment)
+				.setValue(this.plugin.settings.defaultAlignmentForTableGenerator)
 				.onChange(async (val) => {
-					this.plugin.settings.alignment = (val as ('left' | 'middle' | 'right'));
+					this.plugin.settings.defaultAlignmentForTableGenerator = (val as ('left' | 'center' | 'right'));
 					await this.plugin.saveSettings();
-				}))
+				}));
+		new Setting(this.containerEl)
+			.setName('Default alignment for new inserted column')
+			.setDesc('Choose if you want to align the text in a cell to the right, left, in the middle, or follow other columns.')
+			.addDropdown(d => d
+				.addOption('left', 'left')
+				.addOption('center', 'center')
+				.addOption('right', 'right')
+				.addOption('follow', 'follow')
+				.setValue(this.plugin.settings.defaultAlignmentWhenInsertNewCol)
+				.onChange(async (val) => {
+					this.plugin.settings.defaultAlignmentWhenInsertNewCol = (val as ('left' | 'center' | 'right' | 'follow'));
+					await this.plugin.saveSettings();
+				}));
 	}
 }
