@@ -46,7 +46,6 @@ export function getClickHandler(plugin: TableEnhancer2) {
 		const cellEl = getEditableNode(e.targetNode);
 		if (!cellEl) return;
 		// 否则是点击了某个单元格
-		e.stopImmediatePropagation();
 		e.preventDefault();
 		// 确定这个单元格所属的 table
 		let tableEl = cellEl.parentNode;
