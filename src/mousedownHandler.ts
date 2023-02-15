@@ -45,9 +45,6 @@ export function getClickHandler(plugin: TableEnhancer2) {
 		// 不是点击单元格触发的事件
 		const cellEl = getEditableNode(e.targetNode);
 		if (!cellEl) return;
-		// 否则是点击了某个单元格
-		e.stopImmediatePropagation();
-		e.preventDefault();
 		// 确定这个单元格所属的 table
 		let tableEl = cellEl.parentNode;
 		while (tableEl) {
@@ -59,9 +56,15 @@ export function getClickHandler(plugin: TableEnhancer2) {
 			console.error('Cannot get table element of cell ', cellEl);
 			return;
 		}
-		// 忽略 dataview 创建的表格
-		if (tableEl.hasClass('dataview'))
+		// 不是编辑器里的表格
+		if (!editorView?.contentDOM.contains(tableEl))
 			return;
+		// XXX 默认 Obsidian 的 table 标签上没有任何 class
+		if (tableEl.classList.length > 0)
+			return;
+		// 否则是点击了某个需要编辑的单元格
+		e.stopImmediatePropagation();
+		e.preventDefault();
 		const { tableLine, i, j } = getCellInfo(cellEl, plugin, tableEl)!;
 		// 已经处于编辑模式
 		if (cellEl.isContentEditable) {

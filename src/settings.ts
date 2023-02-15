@@ -10,6 +10,7 @@ export interface TableEnhancer2Settings {
 	defaultAlignmentForTableGenerator: 'right' | 'left' | 'center',
 	defaultAlignmentWhenInsertNewCol: 'right' | 'left' | 'center' | 'follow',
 	enableColumnWidthAdjust: boolean,
+
 }
 
 export const DEFAULT_SETTINGS: TableEnhancer2Settings = {
