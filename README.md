@@ -60,6 +60,12 @@ Note: the plugin is not in the community plugins tab just yet and needs to be ma
 	
 # FAQ
 
+- Q: "Create new table" not work!
+
+	![image](https://user-images.githubusercontent.com/38722307/220295890-7ccfa74a-054f-48d3-b71f-d10f772638a8.png)
+
+	A: Make sure "Settings - Appearance - Native menus" is DISABLED!
+
 # Implementation Notes
 
 The implementation of this plugin is actually quite simple. Just intercept any click event, when any click on table cell is intercepted, then set the cell "contenteditable", allowing people to edit the cell in wyswyg way. When any click is intercepted elsewhere (or other events such as esc being pressed), persist all the editing cells (set "content editable").
