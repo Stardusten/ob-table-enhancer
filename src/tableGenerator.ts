@@ -1,7 +1,36 @@
-import {Editor, Menu} from "obsidian";
+import {Editor, Menu, MarkdownView} from "obsidian";
 import TableEnhancer2 from "../main";
 
-export const addTableGenerator = (
+const calcCursorCoord = (editor: Editor) => {
+	const cursor = editor.getCursor('from');
+	const editor2 = editor as any;
+	let coord: any;
+	if (editor2.coordsAtPos) {
+		const offset = editor.posToOffset(cursor);
+		coord = editor2.cm.coordsAtPos?.(offset) ?? editor2.coordsAtPos(offset);
+	} else {
+		console.error('Cannot get cursor coordinate');
+		return null;
+	}
+
+	return coord;
+};
+
+const openTableGenerator = (plugin: TableEnhancer2, etr?: Editor) => {
+	const editor =
+		etr ?? plugin.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+	if (!editor || editor === null) {
+		console.error('Cannot get active editor');
+		return;
+	}
+
+	// 在光标位置打开 tableGenerator
+	const coord = calcCursorCoord(editor);
+	const tableGenerator = new TableGenerator(plugin);
+	tableGenerator.showAtPosition({ x: coord.left, y: coord.bottom });
+};
+
+export const addTableGeneratorMenuItem = (
 	menu: Menu,
 	plugin: TableEnhancer2,
 	editor: Editor
@@ -10,23 +39,26 @@ export const addTableGenerator = (
 		menuItem.setTitle('Create new table');
 		menuItem.setIcon('table');
 		menuItem.onClick(async e => {
-			// 计算光标位置
-			const cursor = editor.getCursor('from');
-			const editor2 = editor as any;
-			let coord: any;
-			if (editor2.coordsAtPos) {
-				const offset = editor.posToOffset(cursor);
-				coord = editor2.cm.coordsAtPos?.(offset) ?? editor2.coordsAtPos(offset);
-			} else {
-				console.error('Cannot get cursor coordinate');
-				return;
-			}
-			// 在光标位置打开 tableGenerator
-			const tableGenerator = new TableGenerator(plugin);
-			tableGenerator.showAtPosition({ x: coord.left, y: coord.bottom });
+      openTableGenerator(plugin, editor);
 		});
 	});
 }
+
+export const addTableGeneratorCommand = (plugin: TableEnhancer2) => {
+	plugin.addCommand({
+		id: 'create-table-with-table-generator',
+		name: 'Create table with table generator',
+		checkCallback: (checking) => {
+			// checking if the command should appear in the Command Palette
+			if (checking) {
+				// make sure the active view is a MarkdownView.
+				return !!plugin.app.workspace.getActiveViewOfType(MarkdownView);
+			}
+
+			openTableGenerator(plugin);
+		},
+	});
+};
 
 class TableGenerator extends Menu {
 
