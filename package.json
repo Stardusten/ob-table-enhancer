@@ -24,6 +24,9 @@
 	},
 	"dependencies": {
 		"@codemirror/language": "^6.3.2",
+		"@codemirror/state": "^6.2.1",
+		"@codemirror/view": "^6.21.3",
+		"codemirror": "^6.0.1",
 		"monkey-around": "^2.3.0"
 	}
 }

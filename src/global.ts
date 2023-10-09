@@ -2,7 +2,6 @@ import {TableEditor} from "./tableEditor";
 import TableEnhancer2 from "../main";
 import {MarkdownView} from "obsidian";
 import {EditorView} from "@codemirror/view";
-import {off} from "codemirror";
 
 export const editingCellClassName = 'editing-cell';
 export const hoveredCellClassName = 'hovered-cell';
