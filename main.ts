@@ -86,6 +86,15 @@ export default class TableEnhancer2 extends Plugin {
 			)
 		});
 
+		// obsidian 1.4+ set table contenteditable=true
+		this.registerEvent(this.app.workspace.on("layout-change", ()=> {
+			const view: HTMLElement = this.app.workspace.getActiveViewOfType(MarkdownView).contentEl;
+    		view.querySelectorAll("div.cm-embed-block.cm-table-widget").forEach(el => {
+    	    	// @ts-ignore
+        		el.attributes.getNamedItem("contenteditable").value = "true";
+    		});
+		}));
+
 		this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor) => {
 			// 要求不使用原生 menu
 			menu.setUseNativeMenu(false);
