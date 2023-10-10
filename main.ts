@@ -17,7 +17,7 @@ import {
 } from "./src/menuItems";
 import {ToolBar} from "./src/toolBar";
 import {addButtons} from "./src/buttonPanel";
-import {addTableGenerator} from "./src/tableGenerator";
+import {addTableGeneratorMenuItem, addTableGeneratorCommand} from "./src/tableGenerator";
 import {DEFAULT_SETTINGS, TableEnhancer2Settings, TableEnhancer2SettingTab} from "./src/settings";
 import {getTableHoverPostProcessor} from "./src/tableHoverPostProcessor";
 import {getClickHandler, getMousedownHandler} from "./src/mousedownHandler";
@@ -103,7 +103,7 @@ export default class TableEnhancer2 extends Plugin {
 			if (!(hoveredCell instanceof HTMLTableCellElement)) {// 没有 hover 在 cell 上
 				// 则可以显示 table generator
 				if (this.settings.enableTableGenerator)
-					addTableGenerator(menu, this, editor);
+					addTableGeneratorMenuItem(menu, this, editor);
 				return;
 			}
 			// 先获得行列信息，而不是先保存更改，因为保存更改会触发重绘，导致 posAtDom 没法用
@@ -111,6 +111,9 @@ export default class TableEnhancer2 extends Plugin {
 			if (this.settings.enableButtonPanel)
 				addButtons(menu, this, cellInfo);
 		}));
+
+		// 添加命令面板命令
+    addTableGeneratorCommand(this);
 	}
 
 	setCellEditing(
